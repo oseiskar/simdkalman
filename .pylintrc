@@ -1,0 +1,21 @@
+
+# these liberal settings are for using the linter to spot bugs,
+# but not nag about things we know are bad (m'kay)
+
+[MESSAGES CONTROL]
+
+# C = all convention messages
+# R = all refactor messages
+# W0141 = use of map
+# W0142 = use of kwargs magic
+disable = C,W0141,W0142,R
+
+[FORMAT]
+
+# Maximum number of characters on a single line.
+max-line-length=110
+
+[TYPECHECK]
+
+# these are workarounds for linter bugs
+ignored-modules = numpy
