@@ -1,5 +1,6 @@
 import unittest
 import simdkalman
+import primitives
 import numpy as np
 
 class TestWithMatrices(unittest.TestCase):
@@ -14,10 +15,10 @@ class TestWithMatrices(unittest.TestCase):
 class TestKalman(TestWithMatrices):
 
     def test_ensure_matrix(self):
-        self.assertMatrixEqual(simdkalman.ensure_matrix(3), np.eye(1)*3)
-        self.assertMatrixEqual(simdkalman.ensure_matrix([[3.0]]), np.eye(1)*3)
-        self.assertMatrixEqual(simdkalman.ensure_matrix(np.eye(1)), np.eye(1))
-        self.assertMatrixEqual(simdkalman.ensure_matrix(np.eye(3)), np.eye(3))
+        self.assertMatrixEqual(primitives.ensure_matrix(3), np.eye(1)*3)
+        self.assertMatrixEqual(primitives.ensure_matrix([[3.0]]), np.eye(1)*3)
+        self.assertMatrixEqual(primitives.ensure_matrix(np.eye(1)), np.eye(1))
+        self.assertMatrixEqual(primitives.ensure_matrix(np.eye(3)), np.eye(3))
 
     def test_ddot(self):
 
@@ -25,14 +26,14 @@ class TestKalman(TestWithMatrices):
         self.assertMatrixEqual(vec(1,2,3), np.array([[[1],[2],[3]]]))
 
         self.assertMatrixEqual(\
-            simdkalman.ddot(np.diag([1,-1,0])[np.newaxis,...], vec(1,2,3)), \
+            primitives.ddot(np.diag([1,-1,0])[np.newaxis,...], vec(1,2,3)), \
             vec(1,-2,0))
 
         stack_mats = lambda *args: np.vstack([a[np.newaxis,...] for a in args])
         self.assertMatrixEqual(stack_mats(np.eye(2), np.eye(2)*3)[0,...], np.eye(2))
 
         self.assertMatrixEqual( \
-            simdkalman.ddot( \
+            primitives.ddot( \
                 stack_mats(np.eye(2)*1, np.array([[2,0],[1,1]]), np.eye(2)*3), \
                 np.vstack([vec(1,2), vec(3,4), vec(5,6)])), \
             np.vstack([vec(1,2), vec(6, 7), vec(15, 18)]))
@@ -44,7 +45,7 @@ class TestKalman(TestWithMatrices):
         stack_mats = lambda *args: np.vstack([a[np.newaxis,...] for a in args])
 
         self.assertMatrixEqual( \
-            simdkalman.ddot_t_right( \
+            primitives.ddot_t_right( \
                 T(np.vstack([vec(1,2), vec(3,4), vec(5,6)])),
                 stack_mats(np.eye(2)*1, np.array([[2,0],[1,1]]), np.eye(2)*3)), \
             T(np.vstack([vec(1,2), vec(6, 7), vec(15, 18)])))
@@ -57,7 +58,7 @@ class TestKalman(TestWithMatrices):
         state_transition = np.eye(3)*0.5
         process_noise = np.eye(3)*0.1
 
-        m1, P1 = simdkalman.predict(mean, covariance, state_transition, process_noise)
+        m1, P1 = primitives.predict(mean, covariance, state_transition, process_noise)
 
         self.assertSequenceEqual(m1.shape, (3,1))
         self.assertSequenceEqual(P1.shape, (3,3))
@@ -74,7 +75,7 @@ class TestKalman(TestWithMatrices):
 
         measurement = np.array([[3],[4]])
 
-        m, P = simdkalman.update(prior_mean, prior_covariance, measurement_model, measurement_noise, measurement)
+        m, P = primitives.update(prior_mean, prior_covariance, measurement_model, measurement_noise, measurement)
 
         self.assertSequenceEqual(m.shape, (3,1))
         self.assertSequenceEqual(P.shape, (3,3))
@@ -90,7 +91,7 @@ class TestKalman(TestWithMatrices):
         state_transition = np.eye(3)*0.5
         process_noise = np.eye(3)*0.1
 
-        ms, Ps = simdkalman.smooth(
+        ms, Ps = primitives.smooth(
             mean,
             covariance,
             state_transition,
@@ -114,7 +115,7 @@ class TestKalman(TestWithMatrices):
 
         measurement = np.array([[3],[np.nan]])
 
-        m, P = simdkalman.update_with_nan_check(
+        m, P = primitives.update_with_nan_check(
             prior_mean,
             prior_covariance,
             measurement_model,
@@ -139,7 +140,7 @@ class TestKalman(TestWithMatrices):
         state_transition = stack_mats([np.eye(2)]*3)
         process_noise = stack_mats([np.eye(2)]*3)*0.1
 
-        m1, P1 = simdkalman.predict(
+        m1, P1 = primitives.predict(
             mean,
             covariance,
             state_transition,
@@ -153,7 +154,7 @@ class TestKalman(TestWithMatrices):
 
         measurement = np.array([[[2]], [[np.nan]], [[33]]])
 
-        m, P = simdkalman.update_with_nan_check(
+        m, P = primitives.update_with_nan_check(
             m1,
             P1,
             measurement_model,
@@ -181,7 +182,7 @@ class TestKalman(TestWithMatrices):
         state_transition = np.eye(2)
         process_noise = np.eye(2)*0.1
 
-        m1, P1 = simdkalman.predict(
+        m1, P1 = primitives.predict(
             mean,
             covariance,
             state_transition,
@@ -195,7 +196,7 @@ class TestKalman(TestWithMatrices):
 
         measurement = np.array([[[2]], [[np.nan]], [[33]]])
 
-        m, P = simdkalman.update_with_nan_check(
+        m, P = primitives.update_with_nan_check(
             m1,
             P1,
             measurement_model,
@@ -216,7 +217,7 @@ class TestKalman(TestWithMatrices):
         state_transition = np.array([[2]])
         process_noise = np.array([[0.1]])
 
-        m1, P1 = simdkalman.predict(
+        m1, P1 = primitives.predict(
             mean,
             covariance,
             state_transition,
@@ -230,7 +231,7 @@ class TestKalman(TestWithMatrices):
 
         measurement = np.array([[1]])
 
-        m, P = simdkalman.update_with_nan_check(
+        m, P = primitives.update_with_nan_check(
             m1,
             P1,
             measurement_model,
