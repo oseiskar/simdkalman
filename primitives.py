@@ -51,7 +51,7 @@ def predict(mean, covariance, state_transition, process_noise):
     return prior_mean, prior_cov
 
 @autoshape
-def _update(prior_mean, prior_covariance, observation_model, observation_noise, measurement, compute_log_likelihood=False):
+def _update(prior_mean, prior_covariance, observation_model, observation_noise, measurement, log_likelihood=False):
 
     n = prior_mean.shape[1]
     m = observation_model.shape[1]
@@ -79,7 +79,7 @@ def _update(prior_mean, prior_covariance, observation_model, observation_noise, 
 
     # inv-chi2 test var
     # outlier_test = np.sum(v * ddot(invS, v), axis=0)
-    if compute_log_likelihood:
+    if log_likelihood:
         l = np.ravel(ddot(v.transpose((0,2,1)), ddot(invS, v)))
         l += np.log(np.linalg.det(S))
         l *= -0.5
@@ -140,7 +140,7 @@ def priv_update_with_nan_check(
         observation_model,
         observation_noise,
         measurement,
-        compute_log_likelihood=False):
+        log_likelihood=False):
 
     tup = _update(
         prior_mean,
@@ -148,7 +148,7 @@ def priv_update_with_nan_check(
         observation_model,
         observation_noise,
         measurement,
-        compute_log_likelihood=compute_log_likelihood)
+        log_likelihood=log_likelihood)
 
     m1, P1, K = tup[:3]
 
@@ -158,7 +158,7 @@ def priv_update_with_nan_check(
     P1[is_nan,...] = prior_covariance[is_nan,...]
     K[is_nan,...] = 0
 
-    if compute_log_likelihood:
+    if log_likelihood:
         l = tup[-1]
         l[is_nan] = 0
         return m1, P1, K, l
