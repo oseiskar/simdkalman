@@ -5,8 +5,8 @@ import numpy.random as random
 kf = simdkalman.KalmanFilter(
     state_transition = np.array([[1,1],[0,1]]),
     process_noise = np.diag([0.1, 0.01]),
-    measurement_model = np.array([[1,0]]),
-    measurement_noise = 1.0)
+    observation_model = np.array([[1,0]]),
+    observation_noise = 1.0)
 
 # simulate 100 random walk time series
 rand = lambda: random.normal(size=(100, 200))

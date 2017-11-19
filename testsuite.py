@@ -70,12 +70,12 @@ class TestKalman(TestWithMatrices):
         prior_mean = np.array([[1],[2],[3]])
         prior_covariance = np.eye(3)*2
 
-        measurement_model = np.ones((2,3))
-        measurement_noise = np.eye(2)*0.1
+        observation_model = np.ones((2,3))
+        observation_noise = np.eye(2)*0.1
 
         measurement = np.array([[3],[4]])
 
-        m, P = primitives.update(prior_mean, prior_covariance, measurement_model, measurement_noise, measurement)
+        m, P = primitives.update(prior_mean, prior_covariance, observation_model, observation_noise, measurement)
 
         self.assertSequenceEqual(m.shape, (3,1))
         self.assertSequenceEqual(P.shape, (3,3))
@@ -110,16 +110,16 @@ class TestKalman(TestWithMatrices):
         prior_mean = np.array([[1],[2],[3]])
         prior_covariance = np.eye(3)*2
 
-        measurement_model = np.ones((2,3))
-        measurement_noise = np.eye(2)*0.1
+        observation_model = np.ones((2,3))
+        observation_noise = np.eye(2)*0.1
 
         measurement = np.array([[3],[np.nan]])
 
         m, P = primitives.update_with_nan_check(
             prior_mean,
             prior_covariance,
-            measurement_model,
-            measurement_noise,
+            observation_model,
+            observation_noise,
             measurement)
 
         self.assertSequenceEqual(m.shape, (3,1))
@@ -149,16 +149,16 @@ class TestKalman(TestWithMatrices):
         self.assertMatrixEqual(m1, mean)
         self.assertSequenceEqual(P1.shape, (3,2,2))
 
-        measurement_model = stack_mats([np.ones((1,2))]*3)
-        measurement_noise = stack_mats([np.eye(1)*0.1]*3)
+        observation_model = stack_mats([np.ones((1,2))]*3)
+        observation_noise = stack_mats([np.eye(1)*0.1]*3)
 
         measurement = np.array([[[2]], [[np.nan]], [[33]]])
 
         m, P = primitives.update_with_nan_check(
             m1,
             P1,
-            measurement_model,
-            measurement_noise,
+            observation_model,
+            observation_noise,
             measurement)
 
         self.assertSequenceEqual(m.shape, (3,2,1))
@@ -191,16 +191,16 @@ class TestKalman(TestWithMatrices):
         self.assertMatrixEqual(m1, mean)
         self.assertSequenceEqual(P1.shape, (3,2,2))
 
-        measurement_model = np.ones((1,2))
-        measurement_noise = np.eye(1)*0.1
+        observation_model = np.ones((1,2))
+        observation_noise = np.eye(1)*0.1
 
         measurement = np.array([[[2]], [[np.nan]], [[33]]])
 
         m, P = primitives.update_with_nan_check(
             m1,
             P1,
-            measurement_model,
-            measurement_noise,
+            observation_model,
+            observation_noise,
             measurement)
 
         self.assertSequenceEqual(m.shape, (3,2,1))
@@ -226,16 +226,16 @@ class TestKalman(TestWithMatrices):
         self.assertMatrixEqual(m1, mean*2, epsilon=1e-6)
         self.assertSequenceEqual(P1.shape, (1,1))
 
-        measurement_model = np.array([[1]])
-        measurement_noise = np.array([[0.2]])
+        observation_model = np.array([[1]])
+        observation_noise = np.array([[0.2]])
 
         measurement = np.array([[1]])
 
         m, P = primitives.update_with_nan_check(
             m1,
             P1,
-            measurement_model,
-            measurement_noise,
+            observation_model,
+            observation_noise,
             measurement)
 
         self.assertSequenceEqual(m.shape, (1,1))
@@ -247,8 +247,8 @@ class TestKalman(TestWithMatrices):
         kf = simdkalman.KalmanFilter(
             state_transition = 1,
             process_noise = 0.1,
-            measurement_model = 1,
-            measurement_noise = 0.1)
+            observation_model = 1,
+            observation_noise = 0.1)
 
         r = kf.compute(
             training_matrix,
@@ -268,8 +268,8 @@ class TestKalman(TestWithMatrices):
         kf = simdkalman.KalmanFilter(
             state_transition = 1,
             process_noise = 0.1,
-            measurement_model = 1,
-            measurement_noise = 0.1)
+            observation_model = 1,
+            observation_noise = 0.1)
 
         r = kf.predict(training_matrix, n_test = 4)
 
@@ -284,8 +284,8 @@ class TestKalman(TestWithMatrices):
         kf = simdkalman.KalmanFilter(
             state_transition = np.eye(2),
             process_noise = 0.1,
-            measurement_model = np.array([[1,1]]),
-            measurement_noise = 0.1)
+            observation_model = np.array([[1,1]]),
+            observation_noise = 0.1)
 
         r = kf.compute(
             training_matrix,
@@ -321,8 +321,8 @@ class TestKalman(TestWithMatrices):
         kf = simdkalman.KalmanFilter(
             state_transition = np.eye(2),
             process_noise = 0.1,
-            measurement_model = np.array([[1,1]]),
-            measurement_noise = 0.1)
+            observation_model = np.array([[1,1]]),
+            observation_noise = 0.1)
 
         r = kf.smooth(training_matrix)
 
@@ -336,8 +336,8 @@ class TestKalman(TestWithMatrices):
         kf = simdkalman.KalmanFilter(
             state_transition = np.eye(2),
             process_noise = 0.1,
-            measurement_model = np.array([[1,1]]),
-            measurement_noise = 0.1)
+            observation_model = np.array([[1,1]]),
+            observation_noise = 0.1)
 
         r = kf.em(training_matrix, n_iter=5, verbose=False)
 
@@ -346,7 +346,7 @@ class TestKalman(TestWithMatrices):
         self.assertMatrixEqual(A0, A0.T)
         self.assertTrue(min(np.linalg.eig(A0)[0]) > 0)
 
-        B = r.measurement_noise
+        B = r.observation_noise
         self.assertSequenceEqual(B.shape, (5,1,1))
         self.assertTrue(min(list(B)) > 0)
 

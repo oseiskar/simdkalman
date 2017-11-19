@@ -10,37 +10,37 @@ class KalmanFilter(object):
     def __init__(self,
         state_transition,
         process_noise,
-        measurement_model,
-        measurement_noise):
+        observation_model,
+        observation_noise):
 
         n_obs = 1
         state_transition = ensure_matrix(state_transition)
         n_states = state_transition.shape[0]
 
         process_noise = ensure_matrix(process_noise, n_states)
-        measurement_model = ensure_matrix(measurement_model)
-        measurement_noise = ensure_matrix(measurement_noise, n_obs)
+        observation_model = ensure_matrix(observation_model)
+        observation_noise = ensure_matrix(observation_noise, n_obs)
 
         assert(state_transition.shape[-2:] == (n_states, n_states))
         assert(process_noise.shape[-2:] == (n_states, n_states))
-        assert(measurement_model.shape[-2:] == (n_obs, n_states))
-        assert(measurement_noise.shape[-2:] == (n_obs, n_obs))
+        assert(observation_model.shape[-2:] == (n_obs, n_states))
+        assert(observation_noise.shape[-2:] == (n_obs, n_obs))
 
         self.state_transition = state_transition
         self.process_noise = process_noise
-        self.measurement_model = measurement_model
-        self.measurement_noise = measurement_noise
+        self.observation_model = observation_model
+        self.observation_noise = observation_noise
 
     def predict_next(self, m, P):
         return predict(m, P, self.state_transition, self.process_noise)
 
     def update_with_nan_check(self, m, P, y, compute_log_likelihood=False):
         return priv_update_with_nan_check(m, P,
-            self.measurement_model, self.measurement_noise, y,
+            self.observation_model, self.observation_noise, y,
             compute_log_likelihood=compute_log_likelihood)
 
     def expected_observation(self, m):
-        return expected_observation(m, self.measurement_model)
+        return expected_observation(m, self.observation_model)
 
     def smooth_current(self, m, P, ms, Ps):
         return priv_smooth(m, P,
@@ -134,7 +134,7 @@ class KalmanFilter(object):
 
         if initial_covariance is None:
             initial_covariance = ensure_matrix(
-                np.trace(ensure_matrix(self.measurement_model))*(5**2), n_states)
+                np.trace(ensure_matrix(self.observation_model))*(5**2), n_states)
 
         initial_covariance = ensure_matrix(initial_covariance, n_states)
         initial_value = ensure_matrix(initial_value)
@@ -302,9 +302,9 @@ class KalmanFilter(object):
             y = training_matrix[:,j].reshape((n_vars, 1, 1))
             not_nan = np.ravel(~np.isnan(y))
             n_not_nan += not_nan
-            err = y - ddot(self.measurement_model, ms)
+            err = y - ddot(self.observation_model, ms)
 
-            r = douter(err, err) + ddot(self.measurement_model, ddot_t_right(Ps, self.measurement_model))
+            r = douter(err, err) + ddot(self.observation_model, ddot_t_right(Ps, self.observation_model))
             res[not_nan] += np.ravel(r)[not_nan]
 
         res /= np.maximum(n_not_nan, 1)
@@ -351,7 +351,7 @@ class KalmanFilter(object):
         new_model = KalmanFilter(
             self.state_transition,
             process_noise,
-            self.measurement_model,
+            self.observation_model,
             observation_noise)
 
         return new_model.em(training_matrix, n_iter-1, initial_value, initial_covariance, verbose)

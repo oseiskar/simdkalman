@@ -51,31 +51,31 @@ def predict(mean, covariance, state_transition, process_noise):
     return prior_mean, prior_cov
 
 @autoshape
-def _update(prior_mean, prior_covariance, measurement_model, measurement_noise, measurement, compute_log_likelihood=False):
+def _update(prior_mean, prior_covariance, observation_model, observation_noise, measurement, compute_log_likelihood=False):
 
     n = prior_mean.shape[1]
-    m = measurement_model.shape[1]
+    m = observation_model.shape[1]
 
     assert(measurement.shape[-2:] == (m,1))
     assert(prior_covariance.shape[-2:] == (n,n))
-    assert(measurement_model.shape[-2:] == (m,n))
-    assert(measurement_noise.shape[-2:] == (m,m))
+    assert(observation_model.shape[-2:] == (m,n))
+    assert(observation_noise.shape[-2:] == (m,m))
 
     # y - H * mp
-    v = measurement - ddot(measurement_model, prior_mean)
+    v = measurement - ddot(observation_model, prior_mean)
 
     # H * Pp * H.t + R
-    S = ddot(measurement_model, ddot_t_right(prior_covariance, measurement_model)) + measurement_noise
+    S = ddot(observation_model, ddot_t_right(prior_covariance, observation_model)) + observation_noise
     invS = dinv(S)
 
     # Kalman gain: Pp * H.t * invS
-    K = ddot(ddot_t_right(prior_covariance, measurement_model), invS)
+    K = ddot(ddot_t_right(prior_covariance, observation_model), invS)
 
     # K * v + mp
     posterior_mean = ddot(K, v) + prior_mean
 
     # Pp - K * H * Pp
-    posterior_covariance = prior_covariance - ddot(K, ddot(measurement_model, prior_covariance))
+    posterior_covariance = prior_covariance - ddot(K, ddot(observation_model, prior_covariance))
 
     # inv-chi2 test var
     # outlier_test = np.sum(v * ddot(invS, v), axis=0)
@@ -89,8 +89,8 @@ def _update(prior_mean, prior_covariance, measurement_model, measurement_noise, 
 
     return posterior_mean, posterior_covariance
 
-def update(prior_mean, prior_covariance, measurement_model, measurement_noise, measurement):
-    return  _update(prior_mean, prior_covariance, measurement_model, measurement_noise, measurement)[:2]
+def update(prior_mean, prior_covariance, observation_model, observation_noise, measurement):
+    return  _update(prior_mean, prior_covariance, observation_model, observation_noise, measurement)[:2]
 
 @autoshape
 def priv_smooth(posterior_mean, posterior_covariance, state_transition, process_noise, next_smooth_mean, next_smooth_covariance):
@@ -124,29 +124,29 @@ def smooth(posterior_mean, posterior_covariance, state_transition, process_noise
     return priv_smooth(posterior_mean, posterior_covariance, state_transition, process_noise, next_smooth_mean, next_smooth_covariance)[:2]
 
 @autoshape
-def expected_observation(mean, measurement_model):
+def expected_observation(mean, observation_model):
 
     n = mean.shape[1]
-    m = measurement_model.shape[1]
-    assert(measurement_model.shape[-2:] == (m,n))
+    m = observation_model.shape[1]
+    assert(observation_model.shape[-2:] == (m,n))
 
     # H * m
-    return ddot(measurement_model, mean)
+    return ddot(observation_model, mean)
 
 @autoshape
 def priv_update_with_nan_check(
         prior_mean,
         prior_covariance,
-        measurement_model,
-        measurement_noise,
+        observation_model,
+        observation_noise,
         measurement,
         compute_log_likelihood=False):
 
     tup = _update(
         prior_mean,
         prior_covariance,
-        measurement_model,
-        measurement_noise,
+        observation_model,
+        observation_noise,
         measurement,
         compute_log_likelihood=compute_log_likelihood)
 
@@ -168,15 +168,15 @@ def priv_update_with_nan_check(
 def update_with_nan_check(
         prior_mean,
         prior_covariance,
-        measurement_model,
-        measurement_noise,
+        observation_model,
+        observation_noise,
         measurement):
 
     return priv_update_with_nan_check(
         prior_mean,
         prior_covariance,
-        measurement_model,
-        measurement_noise,
+        observation_model,
+        observation_noise,
         measurement)[:2]
 
 def ensure_matrix(x, dim=1):
