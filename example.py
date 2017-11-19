@@ -38,7 +38,7 @@ for i in range(3):
     plt.plot(x, hidden_level + stdev, 'k--')
 
     x_pred = np.arange(data.shape[1], data.shape[1]+pred.observations.mean.shape[1])
-    y_pred = pred.observations.mean[i,:,0]
+    y_pred = pred.observations.mean[i,:]
     pred_stdev = np.sqrt(pred.states.cov[i,:,0,0])
     plt.plot(x_pred, y_pred, 'b-', label="predicted")
     plt.plot(x_pred, y_pred + pred_stdev, 'k--')

@@ -255,8 +255,8 @@ class TestKalman(TestWithMatrices):
             n_test = 4,
             initial_covariance = 1.0)
 
-        self.assertSequenceEqual(r.predicted.observations.mean[...,0].shape, (5,4))
-        self.assertSequenceEqual(r.smoothed.observations.mean[...,0].shape, training_matrix.shape)
+        self.assertSequenceEqual(r.predicted.observations.mean.shape, (5,4))
+        self.assertSequenceEqual(r.smoothed.observations.mean.shape, training_matrix.shape)
         self.assertSequenceEqual(r.predicted.states.mean.shape, (5,4,1))
         self.assertSequenceEqual(r.smoothed.states.mean.shape, (5,10,1))
         self.assertSequenceEqual(r.predicted.states.cov.shape, (5,4,1,1))
@@ -273,7 +273,7 @@ class TestKalman(TestWithMatrices):
 
         r = kf.predict(training_matrix, n_test = 4)
 
-        self.assertSequenceEqual(r.observations.mean[...,0].shape, (5,4))
+        self.assertSequenceEqual(r.observations.mean.shape, (5,4))
         self.assertSequenceEqual(r.states.mean.shape, (5,4,1))
         self.assertSequenceEqual(r.states.cov.shape, (5,4,1,1))
 
@@ -295,8 +295,8 @@ class TestKalman(TestWithMatrices):
             gains = True,
             log_likelihood = True)
 
-        self.assertSequenceEqual(r.predicted.observations.mean[...,0].shape, (5,4))
-        self.assertSequenceEqual(r.smoothed.observations.mean[...,0].shape, training_matrix.shape)
+        self.assertSequenceEqual(r.predicted.observations.mean.shape, (5,4))
+        self.assertSequenceEqual(r.smoothed.observations.mean.shape, training_matrix.shape)
         self.assertSequenceEqual(r.predicted.states.mean.shape, (5,4,2))
         self.assertSequenceEqual(r.smoothed.states.mean.shape, (5,10,2))
         self.assertSequenceEqual(r.predicted.states.cov.shape, (5,4,2,2))
@@ -326,7 +326,7 @@ class TestKalman(TestWithMatrices):
 
         r = kf.smooth(training_matrix)
 
-        self.assertSequenceEqual(r.observations.mean[...,0].shape, training_matrix.shape)
+        self.assertSequenceEqual(r.observations.mean.shape, training_matrix.shape)
         self.assertSequenceEqual(r.states.mean.shape, (5,10,2))
         self.assertSequenceEqual(r.states.cov.shape, (5,10,2,2))
 

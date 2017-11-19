@@ -26,6 +26,32 @@ class Gaussian:
             cov = None
         return Gaussian(mean, cov)
 
+    def unvectorize_state(self):
+        n_states = self.mean.shape[-1]
+        assert(n_states == 1)
+
+        mean = self.mean
+        cov = self.cov
+
+        mean = mean[...,0]
+        if cov is not None:
+            cov = cov[...,0,0]
+
+        return Gaussian(mean, cov)
+
+    def unvectorize_vars(self):
+        n_vars = self.mean.shape[0]
+        assert(n_vars == 1)
+
+        mean = self.mean
+        cov = self.cov
+
+        mean = mean[0,...]
+        if cov is not None:
+            cov = cov[0,...]
+
+        return Gaussian(mean, cov)
+
 class KalmanFilter(object):
     # pylint: disable=W0232
     class Result:
@@ -139,6 +165,11 @@ class KalmanFilter(object):
             n_measurements=n_measurements,
             cov=covariances):
             return Gaussian.empty(n_states, n_vars, n_measurements, cov)
+
+        def auto_flat_observations(obs_gaussian):
+            if n_obs == 1:
+                return obs_gaussian.unvectorize_state()
+            return obs_gaussian
 
         if initial_value is None:
             initial_value = np.zeros((n_states, 1))
@@ -254,7 +285,12 @@ class KalmanFilter(object):
                 if covariances:
                     result.filtered.states.cov = filtered_states.cov
             if observations:
-                result.filtered.observations = filtered_observations
+                result.filtered.observations = auto_flat_observations(
+                    filtered_observations)
+
+        if smoothed and observations:
+            result.smoothed.observations = auto_flat_observations(
+                result.smoothed.observations)
 
         if n_test > 0:
             result.predicted = KalmanFilter.Result()
@@ -277,6 +313,10 @@ class KalmanFilter(object):
                     # TODO
 
                 m, P = self.predict_next(m, P)
+
+            if observations:
+                result.predicted.observations = auto_flat_observations(
+                    result.predicted.observations)
 
         return result
 
