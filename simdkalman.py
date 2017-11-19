@@ -239,7 +239,7 @@ class KalmanFilter(object):
         initial_covariance,
         smooth = True,
         store_filtered = False,
-        store_states = True,
+        store_means = True,
         store_covariances = True,
         store_observations = True,
         store_likelihoods = False,
@@ -313,7 +313,7 @@ class KalmanFilter(object):
             # lazy trick to keep last filtered = last smoothed
             if store_observations:
                 result.smoothed_observations = 1*filtered_observations
-            if store_states:
+            if store_means:
                 result.smoothed_means = 1*filtered_means
                 if store_covariances:
                     result.smoothed_covariances = 1*filtered_covariances
@@ -335,7 +335,7 @@ class KalmanFilter(object):
 
                 if store_observations:
                     result.smoothed_observations[:,j] = np.ravel(self.expected_observation(ms))
-                if store_states:
+                if store_means:
                     result.smoothed_means[:,j,:] = ms[...,0]
                     if store_covariances:
                         result.smoothed_covariances[:,j,:,:] = Ps
@@ -346,7 +346,7 @@ class KalmanFilter(object):
         if store_filtered:
             if store_observations:
                 result.filtered_observations = filtered_observations
-            if store_states:
+            if store_means:
                 result.filtered_means = filtered_means
                 if store_covariances:
                     result.filtered_covariances = filtered_covariances
@@ -354,7 +354,7 @@ class KalmanFilter(object):
         if n_test > 0:
             if store_observations:
                 result.predicted_observations = np.empty((n_vars, n_test))
-            if store_states:
+            if store_means:
                 result.predicted_means = np.empty((n_vars, n_test, n_states))
                 if store_covariances:
                     result.predicted_covariances = np.empty((n_vars, n_test, n_states, n_states))
@@ -364,7 +364,7 @@ class KalmanFilter(object):
                     print('predicting %d/%d' % (j+1, n_test))
                 if store_observations:
                     result.predicted_observations[:,j] = np.ravel(self.expected_observation(m))
-                if store_states:
+                if store_means:
                     result.predicted_means[:,j,:] = m[...,0]
                     if store_covariances:
                         result.predicted_covariances[:,j,:,:] = P
@@ -452,7 +452,7 @@ class KalmanFilter(object):
             initial_covariance = initial_covariance,
             smooth = True,
             store_filtered = False,
-            store_states = True,
+            store_means = True,
             store_covariances = True,
             store_observations = False,
             store_likelihoods = False,
