@@ -18,11 +18,10 @@ data[random.uniform(size=data.shape) < 0.1] = np.nan
 # fit noise parameters to data with the EM algorithm (optional)
 kf = kf.em(data, n_iter=10)
 
-r = kf.compute(
-    data,
-    n_test = 0, # predict this many new observations
-    initial_value = np.array([[0],[0]]),
-    initial_covariance = 1.0)
+smoothed = kf.smooth(data, observations=False, means=True, covariances=True)
+# or just
+# observations = kf.smooth(data)
+pred = kf.predict(data, 15, covariances=True)
 
 import matplotlib.pyplot as plt
 
@@ -30,12 +29,21 @@ import matplotlib.pyplot as plt
 for i in range(3):
     plt.plot(data[i,:], 'b.', label="data")
 
-    hidden_level = r.smoothed_means[i,:,0]
-    stdev = np.sqrt(r.smoothed_covariances[i,:,0,0])
+    hidden_level = smoothed.means[i,:,0]
+    stdev = np.sqrt(smoothed.covariances[i,:,0,0])
 
-    plt.plot(hidden_level, 'r-', label="hidden level")
-    plt.plot(hidden_level - stdev, 'k--', label="67% confidence")
-    plt.plot(hidden_level + stdev, 'k--')
+    x = np.arange(0, data.shape[1])
+    plt.plot(x, hidden_level, 'r-', label="hidden level")
+    plt.plot(x, hidden_level - stdev, 'k--', label="67% confidence")
+    plt.plot(x, hidden_level + stdev, 'k--')
+
+    x_pred = np.arange(data.shape[1], data.shape[1]+pred.observations.shape[1])
+    y_pred = pred.observations[i,:]
+    pred_stdev = np.sqrt(pred.covariances[i,:,0,0])
+    plt.plot(x_pred, y_pred, 'b-', label="predicted")
+    plt.plot(x_pred, y_pred + pred_stdev, 'k--')
+    plt.plot(x_pred, y_pred - pred_stdev, 'k--')
+
     plt.title("time series %d" % (i+1))
     plt.legend()
     plt.show()

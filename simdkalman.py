@@ -231,18 +231,79 @@ class KalmanFilter(object):
     def smooth_current(self, m, P, ms, Ps):
         return _smooth(m, P, self.state_transition, self.process_noise, ms, Ps)
 
+    def predict(self,
+        training_matrix,
+        n_test,
+        observations = True,
+        means = True,
+        covariances = True,
+        initial_value = None,
+        initial_covariance = None,
+        verbose = False):
+
+        r = self.compute(
+            training_matrix,
+            n_test,
+            initial_value,
+            initial_covariance,
+            compute_smoother = False,
+            means = means,
+            covariances = covariances,
+            observations = observations,
+            verbose = verbose)
+
+        # pylint: disable=W0201
+        r1 = KalmanFilter.Result()
+        if observations:
+            r1.observations = r.predicted_observations
+        if means:
+            r1.means = r.predicted_means
+        if covariances:
+            r1.covariances = r.predicted_covariances
+        return r1
+
+    def smooth(self,
+        training_matrix,
+        observations = True,
+        means = True,
+        covariances = True,
+        initial_value = None,
+        initial_covariance = None,
+        verbose = False):
+
+        r = self.compute(
+            training_matrix,
+            0,
+            initial_value,
+            initial_covariance,
+            compute_smoother = True,
+            means = means,
+            covariances = covariances,
+            observations = observations,
+            verbose = verbose)
+
+        # pylint: disable=W0201
+        r1 = KalmanFilter.Result()
+        if observations:
+            r1.observations = r.smoothed_observations
+        if means:
+            r1.means = r.smoothed_means
+        if covariances:
+            r1.covariances = r.smoothed_covariances
+        return r1
+
     def compute(self,
         training_matrix,
         n_test,
         initial_value = None,
         initial_covariance = None,
         compute_smoother = True,
-        store_filtered = False,
-        store_means = True,
-        store_covariances = True,
-        store_observations = True,
-        store_likelihoods = False,
-        store_gains = False,
+        filtered = False,
+        means = True,
+        covariances = True,
+        observations = True,
+        likelihoods = False,
+        gains = False,
         compute_log_likelihood = False,
         verbose = False):
 
@@ -274,20 +335,20 @@ class KalmanFilter(object):
         m = initial_value
         P = initial_covariance
 
-        keep_filtered = store_filtered or compute_smoother
+        keep_filtered = filtered or compute_smoother
 
         if compute_log_likelihood:
             result.log_likelihood = np.zeros((n_vars,))
-            if store_likelihoods:
+            if likelihoods:
                 result.log_likelihoods = np.empty((n_vars, n_measurements))
 
         if keep_filtered:
-            if store_observations:
+            if observations:
                 filtered_observations = np.empty(training_matrix.shape)
             filtered_means = np.empty((n_vars, n_measurements, n_states))
             filtered_covariances = np.empty((n_vars, n_measurements, n_states, n_states))
 
-        if store_gains:
+        if gains:
             result.filtered_gains = np.empty((n_vars, n_measurements, n_states, n_states))
 
         for j in range(n_measurements):
@@ -301,29 +362,29 @@ class KalmanFilter(object):
             if compute_log_likelihood:
                 l = tup[-1]
                 result.log_likelihood += l
-                if store_likelihoods:
+                if likelihoods:
                     result.log_likelihoods[:,j] = l
 
             if keep_filtered:
-                if store_observations:
+                if observations:
                     filtered_observations[:,j] = np.ravel(self.expected_observation(m))
                 filtered_means[:,j,:] = m[...,0]
                 filtered_covariances[:,j,:,:] = P
 
-            if store_gains:
+            if gains:
                 result.filtered_gains[:,j,:,:] = K
 
             m, P = self.predict_next(m, P)
 
         if compute_smoother:
             # lazy trick to keep last filtered = last smoothed
-            if store_observations:
+            if observations:
                 result.smoothed_observations = 1*filtered_observations
-            if store_means:
+            if means:
                 result.smoothed_means = 1*filtered_means
-                if store_covariances:
-                    result.smoothed_covariances = 1*filtered_covariances
-            if store_gains:
+            if covariances:
+                result.smoothed_covariances = 1*filtered_covariances
+            if gains:
                 result.smoothed_gains = np.zeros((n_vars, n_measurements, n_states, n_states))
                 result.pairwise_covariances = np.zeros((n_vars, n_measurements, n_states, n_states))
 
@@ -339,41 +400,41 @@ class KalmanFilter(object):
                 PsNext = Ps
                 ms, Ps, Cs = self.smooth_current(m0, P0, ms, Ps)
 
-                if store_observations:
+                if observations:
                     result.smoothed_observations[:,j] = np.ravel(self.expected_observation(ms))
-                if store_means:
+                if means:
                     result.smoothed_means[:,j,:] = ms[...,0]
-                    if store_covariances:
-                        result.smoothed_covariances[:,j,:,:] = Ps
-                if store_gains:
+                if covariances:
+                    result.smoothed_covariances[:,j,:,:] = Ps
+                if gains:
                     result.smoothed_gains[:,j,:,:] = Cs
                     result.pairwise_covariances[:,j,:,:] = ddot_t_right(PsNext, Cs)
 
-        if store_filtered:
-            if store_observations:
+        if filtered:
+            if observations:
                 result.filtered_observations = filtered_observations
-            if store_means:
+            if means:
                 result.filtered_means = filtered_means
-                if store_covariances:
-                    result.filtered_covariances = filtered_covariances
+            if covariances:
+                result.filtered_covariances = filtered_covariances
 
         if n_test > 0:
-            if store_observations:
+            if observations:
                 result.predicted_observations = np.empty((n_vars, n_test))
-            if store_means:
+            if means:
                 result.predicted_means = np.empty((n_vars, n_test, n_states))
-                if store_covariances:
-                    result.predicted_covariances = np.empty((n_vars, n_test, n_states, n_states))
+            if covariances:
+                result.predicted_covariances = np.empty((n_vars, n_test, n_states, n_states))
 
             for j in range(n_test):
                 if verbose:
                     print('predicting %d/%d' % (j+1, n_test))
-                if store_observations:
+                if observations:
                     result.predicted_observations[:,j] = np.ravel(self.expected_observation(m))
-                if store_means:
+                if means:
                     result.predicted_means[:,j,:] = m[...,0]
-                    if store_covariances:
-                        result.predicted_covariances[:,j,:,:] = P
+                if covariances:
+                    result.predicted_covariances[:,j,:,:] = P
 
                 m, P = self.predict_next(m, P)
 
@@ -451,12 +512,12 @@ class KalmanFilter(object):
             initial_value = initial_value,
             initial_covariance = initial_covariance,
             compute_smoother = True,
-            store_filtered = False,
-            store_means = True,
-            store_covariances = True,
-            store_observations = False,
-            store_likelihoods = False,
-            store_gains = True,
+            filtered = False,
+            means = True,
+            covariances = True,
+            observations = False,
+            likelihoods = False,
+            gains = True,
             compute_log_likelihood = False,
             verbose = verbose)
 

@@ -261,6 +261,22 @@ class TestKalman(TestWithMatrices):
         self.assertSequenceEqual(r.predicted_covariances.shape, (5,4,1,1))
         self.assertSequenceEqual(r.smoothed_covariances.shape, (5,10,1,1))
 
+    def test_predict_helper_ema(self):
+        training_matrix = np.ones((5,10))
+
+        kf = simdkalman.KalmanFilter(
+            state_transition = 1,
+            process_noise = 0.1,
+            measurement_model = 1,
+            measurement_noise = 0.1)
+
+        r = kf.predict(training_matrix, n_test = 4)
+
+        self.assertSequenceEqual(r.observations.shape, (5,4))
+        self.assertSequenceEqual(r.means.shape, (5,4,1))
+        self.assertSequenceEqual(r.covariances.shape, (5,4,1,1))
+
+
     def test_train_and_predict_vectorized_kalman_filter_2_states(self):
         training_matrix = np.ones((5,10))
 
@@ -275,7 +291,7 @@ class TestKalman(TestWithMatrices):
             n_test = 4,
             initial_covariance = 1.0,
             compute_smoother = True,
-            store_gains = True,
+            gains = True,
             compute_log_likelihood = True)
 
         self.assertSequenceEqual(r.predicted_observations.shape, (5,4))
@@ -298,6 +314,20 @@ class TestKalman(TestWithMatrices):
         self.assertSequenceEqual(B.shape, (5,1,1))
         self.assertTrue(min(list(B)) > 0)
 
+    def test_smooth_helper_kalman_filter_2_states(self):
+        training_matrix = np.ones((5,10))
+
+        kf = simdkalman.KalmanFilter(
+            state_transition = np.eye(2),
+            process_noise = 0.1,
+            measurement_model = np.array([[1,1]]),
+            measurement_noise = 0.1)
+
+        r = kf.smooth(training_matrix)
+
+        self.assertSequenceEqual(r.observations.shape, training_matrix.shape)
+        self.assertSequenceEqual(r.means.shape, (5,10,2))
+        self.assertSequenceEqual(r.covariances.shape, (5,10,2,2))
 
     def test_em_algorithm(self):
         training_matrix = np.ones((5,10))
