@@ -254,12 +254,12 @@ class TestKalman(TestWithMatrices):
             n_test = 4,
             initial_covariance = 1.0)
 
-        self.assertSequenceEqual(r.predicted_observations.shape, (5,4))
-        self.assertSequenceEqual(r.smoothed_observations.shape, training_matrix.shape)
-        self.assertSequenceEqual(r.predicted_means.shape, (5,4,1))
-        self.assertSequenceEqual(r.smoothed_means.shape, (5,10,1))
-        self.assertSequenceEqual(r.predicted_covariances.shape, (5,4,1,1))
-        self.assertSequenceEqual(r.smoothed_covariances.shape, (5,10,1,1))
+        self.assertSequenceEqual(r.predicted.observations.shape, (5,4))
+        self.assertSequenceEqual(r.smoothed.observations.shape, training_matrix.shape)
+        self.assertSequenceEqual(r.predicted.means.shape, (5,4,1))
+        self.assertSequenceEqual(r.smoothed.means.shape, (5,10,1))
+        self.assertSequenceEqual(r.predicted.covariances.shape, (5,4,1,1))
+        self.assertSequenceEqual(r.smoothed.covariances.shape, (5,10,1,1))
 
     def test_predict_helper_ema(self):
         training_matrix = np.ones((5,10))
@@ -294,12 +294,12 @@ class TestKalman(TestWithMatrices):
             gains = True,
             compute_log_likelihood = True)
 
-        self.assertSequenceEqual(r.predicted_observations.shape, (5,4))
-        self.assertSequenceEqual(r.smoothed_observations.shape, training_matrix.shape)
-        self.assertSequenceEqual(r.predicted_means.shape, (5,4,2))
-        self.assertSequenceEqual(r.smoothed_means.shape, (5,10,2))
-        self.assertSequenceEqual(r.predicted_covariances.shape, (5,4,2,2))
-        self.assertSequenceEqual(r.smoothed_covariances.shape, (5,10,2,2))
+        self.assertSequenceEqual(r.predicted.observations.shape, (5,4))
+        self.assertSequenceEqual(r.smoothed.observations.shape, training_matrix.shape)
+        self.assertSequenceEqual(r.predicted.means.shape, (5,4,2))
+        self.assertSequenceEqual(r.smoothed.means.shape, (5,10,2))
+        self.assertSequenceEqual(r.predicted.covariances.shape, (5,4,2,2))
+        self.assertSequenceEqual(r.smoothed.covariances.shape, (5,10,2,2))
 
         self.assertMatrixEqual(r.log_likelihood, np.array([3.792]*5), 1e-2)
 

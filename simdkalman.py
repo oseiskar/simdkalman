@@ -255,11 +255,11 @@ class KalmanFilter(object):
         # pylint: disable=W0201
         r1 = KalmanFilter.Result()
         if observations:
-            r1.observations = r.predicted_observations
+            r1.observations = r.predicted.observations
         if means:
-            r1.means = r.predicted_means
+            r1.means = r.predicted.means
         if covariances:
-            r1.covariances = r.predicted_covariances
+            r1.covariances = r.predicted.covariances
         return r1
 
     def smooth(self,
@@ -285,11 +285,11 @@ class KalmanFilter(object):
         # pylint: disable=W0201
         r1 = KalmanFilter.Result()
         if observations:
-            r1.observations = r.smoothed_observations
+            r1.observations = r.smoothed.observations
         if means:
-            r1.means = r.smoothed_means
+            r1.means = r.smoothed.means
         if covariances:
-            r1.covariances = r.smoothed_covariances
+            r1.covariances = r.smoothed.covariances
         return r1
 
     def compute(self,
@@ -336,6 +336,8 @@ class KalmanFilter(object):
         P = initial_covariance
 
         keep_filtered = filtered or compute_smoother
+        if filtered or gains:
+            result.filtered = KalmanFilter.Result()
 
         if compute_log_likelihood:
             result.log_likelihood = np.zeros((n_vars,))
@@ -349,7 +351,7 @@ class KalmanFilter(object):
             filtered_covariances = np.empty((n_vars, n_measurements, n_states, n_states))
 
         if gains:
-            result.filtered_gains = np.empty((n_vars, n_measurements, n_states, n_states))
+            result.filtered.gains = np.empty((n_vars, n_measurements, n_states, n_states))
 
         for j in range(n_measurements):
             if verbose:
@@ -372,20 +374,22 @@ class KalmanFilter(object):
                 filtered_covariances[:,j,:,:] = P
 
             if gains:
-                result.filtered_gains[:,j,:,:] = K
+                result.filtered.gains[:,j,:,:] = K
 
             m, P = self.predict_next(m, P)
 
         if compute_smoother:
+            result.smoothed = KalmanFilter.Result()
+
             # lazy trick to keep last filtered = last smoothed
             if observations:
-                result.smoothed_observations = 1*filtered_observations
+                result.smoothed.observations = 1*filtered_observations
             if means:
-                result.smoothed_means = 1*filtered_means
+                result.smoothed.means = 1*filtered_means
             if covariances:
-                result.smoothed_covariances = 1*filtered_covariances
+                result.smoothed.covariances = 1*filtered_covariances
             if gains:
-                result.smoothed_gains = np.zeros((n_vars, n_measurements, n_states, n_states))
+                result.smoothed.gains = np.zeros((n_vars, n_measurements, n_states, n_states))
                 result.pairwise_covariances = np.zeros((n_vars, n_measurements, n_states, n_states))
 
             ms = filtered_means[:,-1,:][...,np.newaxis]
@@ -401,47 +405,48 @@ class KalmanFilter(object):
                 ms, Ps, Cs = self.smooth_current(m0, P0, ms, Ps)
 
                 if observations:
-                    result.smoothed_observations[:,j] = np.ravel(self.expected_observation(ms))
+                    result.smoothed.observations[:,j] = np.ravel(self.expected_observation(ms))
                 if means:
-                    result.smoothed_means[:,j,:] = ms[...,0]
+                    result.smoothed.means[:,j,:] = ms[...,0]
                 if covariances:
-                    result.smoothed_covariances[:,j,:,:] = Ps
+                    result.smoothed.covariances[:,j,:,:] = Ps
                 if gains:
-                    result.smoothed_gains[:,j,:,:] = Cs
+                    result.smoothed.gains[:,j,:,:] = Cs
                     result.pairwise_covariances[:,j,:,:] = ddot_t_right(PsNext, Cs)
 
         if filtered:
             if observations:
-                result.filtered_observations = filtered_observations
+                result.filtered.observations = filtered_observations
             if means:
-                result.filtered_means = filtered_means
+                result.filtered.means = filtered_means
             if covariances:
-                result.filtered_covariances = filtered_covariances
+                result.filtered.covariances = filtered_covariances
 
         if n_test > 0:
+            result.predicted = KalmanFilter.Result()
             if observations:
-                result.predicted_observations = np.empty((n_vars, n_test))
+                result.predicted.observations = np.empty((n_vars, n_test))
             if means:
-                result.predicted_means = np.empty((n_vars, n_test, n_states))
+                result.predicted.means = np.empty((n_vars, n_test, n_states))
             if covariances:
-                result.predicted_covariances = np.empty((n_vars, n_test, n_states, n_states))
+                result.predicted.covariances = np.empty((n_vars, n_test, n_states, n_states))
 
             for j in range(n_test):
                 if verbose:
                     print('predicting %d/%d' % (j+1, n_test))
                 if observations:
-                    result.predicted_observations[:,j] = np.ravel(self.expected_observation(m))
+                    result.predicted.observations[:,j] = np.ravel(self.expected_observation(m))
                 if means:
-                    result.predicted_means[:,j,:] = m[...,0]
+                    result.predicted.means[:,j,:] = m[...,0]
                 if covariances:
-                    result.predicted_covariances[:,j,:,:] = P
+                    result.predicted.covariances[:,j,:,:] = P
 
                 m, P = self.predict_next(m, P)
 
         return result
 
     def em_process_noise(self, result, verbose=False):
-        n_vars, n_measurements, n_states = result.smoothed_means.shape
+        n_vars, n_measurements, n_states = result.smoothed.means.shape
 
         res = np.zeros((n_vars, n_states, n_states))
 
@@ -449,8 +454,8 @@ class KalmanFilter(object):
             if verbose:
                 print('computing ML process noise, step %d/%d' % (j+1, n_measurements))
 
-            ms1 = result.smoothed_means[:,j,:][...,np.newaxis]
-            Ps1 = result.smoothed_covariances[:,j,...]
+            ms1 = result.smoothed.means[:,j,:][...,np.newaxis]
+            Ps1 = result.smoothed.covariances[:,j,...]
 
             if j > 0:
                 # pylint: disable=E0601
@@ -467,7 +472,7 @@ class KalmanFilter(object):
         return (1.0 / (n_measurements - 1)) * res
 
     def em_observation_noise(self, result, training_matrix, verbose=False):
-        n_vars, n_measurements, _ = result.smoothed_means.shape
+        n_vars, n_measurements, _ = result.smoothed.means.shape
 
         res = np.zeros((n_vars,))
         n_not_nan = np.zeros((n_vars,))
@@ -476,8 +481,8 @@ class KalmanFilter(object):
             if verbose:
                 print('computing ML observation noise, step %d/%d' % (j+1, n_measurements))
 
-            ms = result.smoothed_means[:,j,:][...,np.newaxis]
-            Ps = result.smoothed_covariances[:,j,...]
+            ms = result.smoothed.means[:,j,:][...,np.newaxis]
+            Ps = result.smoothed.covariances[:,j,...]
 
             y = training_matrix[:,j].reshape((n_vars, 1, 1))
             not_nan = np.ravel(~np.isnan(y))
@@ -538,8 +543,8 @@ class KalmanFilter(object):
 
 def em_initial_state(result, initial_means):
 
-    x0 = result.smoothed_means[:,0,:][...,np.newaxis]
-    P0 = result.smoothed_covariances[:,0,...]
+    x0 = result.smoothed.means[:,0,:][...,np.newaxis]
+    P0 = result.smoothed.covariances[:,0,...]
     x0_x0 = P0 + douter(x0, x0)
 
     m = x0
