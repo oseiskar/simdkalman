@@ -134,6 +134,18 @@ def expected_observation(mean, observation_model):
     return ddot(observation_model, mean)
 
 @autoshape
+def observation_covariance(covariance, observation_model, observation_noise):
+
+    n = covariance.shape[1]
+    m = observation_model.shape[1]
+    assert(covariance.shape[-2:] == (n,n))
+    assert(observation_model.shape[-2:] == (m,n))
+
+    # H * P * H^T + R
+    return ddot(observation_model,
+        ddot_t_right(covariance, observation_model)) + observation_noise
+
+@autoshape
 def priv_update_with_nan_check(
         prior_mean,
         prior_covariance,

@@ -92,6 +92,10 @@ class KalmanFilter(object):
     def expected_observation(self, m):
         return expected_observation(m, self.observation_model)
 
+    def observation_covariance(self, P):
+        return observation_covariance(P,
+            self.observation_model, self.observation_noise)
+
     def smooth_current(self, m, P, ms, Ps):
         return priv_smooth(m, P,
             self.state_transition, self.process_noise, ms, Ps)
@@ -158,7 +162,7 @@ class KalmanFilter(object):
         n_vars = training_matrix.shape[0]
         n_measurements = training_matrix.shape[1]
         n_states = self.state_transition.shape[0]
-        n_obs = 1 # TODO
+        n_obs = 1 # should also allow 3d training data...
 
         def empty_gaussian(
             n_states=n_states,
@@ -225,7 +229,11 @@ class KalmanFilter(object):
 
             if keep_filtered:
                 if observations:
-                    filtered_observations.mean[:,j] = self.expected_observation(m)[...,0]
+                    filtered_observations.mean[:,j,:] = \
+                        self.expected_observation(m)[...,0]
+                    if covariances:
+                        filtered_observations.cov[:,j,:,:] = \
+                            self.observation_covariance(P)
 
                 filtered_states.mean[:,j,:] = m[...,0]
                 filtered_states.cov[:,j,:,:] = P
@@ -248,7 +256,8 @@ class KalmanFilter(object):
             if observations:
                 result.smoothed.observations = empty_gaussian(n_states=n_obs)
                 result.smoothed.observations.mean = 1*filtered_observations.mean
-                # TODO
+                if covariances:
+                    result.smoothed.observations.cov = 1*filtered_observations.cov
 
             if gains:
                 result.smoothed.gains = np.zeros((n_vars, n_measurements, n_states, n_states))
@@ -272,8 +281,11 @@ class KalmanFilter(object):
                         result.smoothed.states.cov[:,j,:,:] = Ps
 
                 if observations:
-                    result.smoothed.observations.mean[:,j] = self.expected_observation(ms)[...,0]
-                    # TODO
+                    result.smoothed.observations.mean[:,j,:] = \
+                        self.expected_observation(ms)[...,0]
+                    if covariances:
+                        result.smoothed.observations.cov[:,j,:,:] = \
+                            self.observation_covariance(Ps)
 
                 if gains:
                     result.smoothed.gains[:,j,:,:] = Cs
@@ -309,8 +321,11 @@ class KalmanFilter(object):
                     if covariances:
                         result.predicted.states.cov[:,j,:,:] = P
                 if observations:
-                    result.predicted.observations.mean[:,j] = self.expected_observation(m)[...,0]
-                    # TODO
+                    result.predicted.observations.mean[:,j,:] = \
+                        self.expected_observation(m)[...,0]
+                    if covariances:
+                        result.predicted.observations.cov[:,j,:,:] = \
+                            self.observation_covariance(P)
 
                 m, P = self.predict_next(m, P)
 
