@@ -277,7 +277,8 @@ class TestKalman(TestWithMatrices):
             initial_value = np.array([[0],[0]]),
             initial_covariance = 1.0,
             smooth = True,
-            store_gains = True)
+            store_gains = True,
+            compute_log_likelihood = True)
 
         self.assertSequenceEqual(r.predicted_observations.shape, (5,4))
         self.assertSequenceEqual(r.smoothed_observations.shape, training_matrix.shape)
@@ -285,6 +286,8 @@ class TestKalman(TestWithMatrices):
         self.assertSequenceEqual(r.smoothed_means.shape, (5,10,2))
         self.assertSequenceEqual(r.predicted_covariances.shape, (5,4,2,2))
         self.assertSequenceEqual(r.smoothed_covariances.shape, (5,10,2,2))
+
+        self.assertMatrixEqual(r.log_likelihood, np.array([3.792]*5), 1e-2)
 
         A = smoother.em_process_noise(r)
 
