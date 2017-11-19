@@ -243,7 +243,7 @@ class TestKalman(TestWithMatrices):
     def test_train_and_predict_vectorized_kalman_filter_ema(self):
         training_matrix = np.ones((5,10))
 
-        smoother = simdkalman.Smoother(
+        smoother = simdkalman.KalmanFilter(
             state_transition = 1,
             process_noise = 0.1,
             measurement_model = 1,
@@ -265,7 +265,7 @@ class TestKalman(TestWithMatrices):
     def test_train_and_predict_vectorized_kalman_filter_2_states(self):
         training_matrix = np.ones((5,10))
 
-        smoother = simdkalman.Smoother(
+        smoother = simdkalman.KalmanFilter(
             state_transition = np.eye(2),
             process_noise = 0.1,
             measurement_model = np.array([[1,1]]),
@@ -301,7 +301,7 @@ class TestKalman(TestWithMatrices):
     def test_em_algorithm(self):
         training_matrix = np.ones((5,10))
 
-        smoother = simdkalman.Smoother(
+        smoother = simdkalman.KalmanFilter(
             state_transition = np.eye(2),
             process_noise = 0.1,
             measurement_model = np.array([[1,1]]),

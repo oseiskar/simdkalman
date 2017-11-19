@@ -2,7 +2,7 @@ import simdkalman
 import numpy as np
 import numpy.random as random
 
-smoother = simdkalman.Smoother(
+smoother = simdkalman.KalmanFilter(
     state_transition = np.array([[1,1],[0,1]]),
     process_noise = np.diag([0.1, 0.01]),
     measurement_model = np.array([[1,0]]),

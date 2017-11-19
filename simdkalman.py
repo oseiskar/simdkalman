@@ -189,7 +189,7 @@ def ensure_matrix(x, dim=1):
         x = np.eye(dim)*x
     return x
 
-class Smoother(object):
+class KalmanFilter(object):
     # pylint: disable=W0232
     class Result:
         pass
@@ -248,7 +248,7 @@ class Smoother(object):
         verbose = False):
 
         # pylint: disable=W0201
-        result = Smoother.Result()
+        result = KalmanFilter.Result()
 
         n_vars = training_matrix.shape[0]
         n_measurements = training_matrix.shape[1]
@@ -467,7 +467,7 @@ class Smoother(object):
         observation_noise = self.em_observation_noise(e_step, training_matrix, verbose=verbose)
         initial_value, initial_covariance = em_initial_state(e_step, initial_value)
 
-        new_model = Smoother(
+        new_model = KalmanFilter(
             self.state_transition,
             process_noise,
             self.measurement_model,

@@ -18,4 +18,4 @@ max-line-length=110
 [TYPECHECK]
 
 # these are workarounds for linter bugs
-ignored-modules = numpy
+ignored-modules = numpy,numpy.random
