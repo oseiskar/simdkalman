@@ -2,7 +2,7 @@ import simdkalman
 import numpy as np
 import numpy.random as random
 
-smoother = simdkalman.KalmanFilter(
+kf = simdkalman.KalmanFilter(
     state_transition = np.array([[1,1],[0,1]]),
     process_noise = np.diag([0.1, 0.01]),
     measurement_model = np.array([[1,0]]),
@@ -16,9 +16,9 @@ data = np.cumsum(np.cumsum(rand()*0.02, axis=1) + rand(), axis=1) + rand()*3
 data[random.uniform(size=data.shape) < 0.1] = np.nan
 
 # fit noise parameters to data with the EM algorithm (optional)
-smoother = smoother.em(data, n_iter=10)
+kf = kf.em(data, n_iter=10)
 
-r = smoother.compute_matrix(
+r = kf.compute(
     data,
     n_test = 0, # predict this many new observations
     initial_value = np.array([[0],[0]]),

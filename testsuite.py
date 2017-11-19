@@ -243,13 +243,13 @@ class TestKalman(TestWithMatrices):
     def test_train_and_predict_vectorized_kalman_filter_ema(self):
         training_matrix = np.ones((5,10))
 
-        smoother = simdkalman.KalmanFilter(
+        kf = simdkalman.KalmanFilter(
             state_transition = 1,
             process_noise = 0.1,
             measurement_model = 1,
             measurement_noise = 0.1)
 
-        r = smoother.compute_matrix(
+        r = kf.compute(
             training_matrix,
             n_test = 4,
             initial_value = 0,
@@ -265,18 +265,18 @@ class TestKalman(TestWithMatrices):
     def test_train_and_predict_vectorized_kalman_filter_2_states(self):
         training_matrix = np.ones((5,10))
 
-        smoother = simdkalman.KalmanFilter(
+        kf = simdkalman.KalmanFilter(
             state_transition = np.eye(2),
             process_noise = 0.1,
             measurement_model = np.array([[1,1]]),
             measurement_noise = 0.1)
 
-        r = smoother.compute_matrix(
+        r = kf.compute(
             training_matrix,
             n_test = 4,
             initial_value = np.array([[0],[0]]),
             initial_covariance = 1.0,
-            smooth = True,
+            compute_smoother = True,
             store_gains = True,
             compute_log_likelihood = True)
 
@@ -289,14 +289,14 @@ class TestKalman(TestWithMatrices):
 
         self.assertMatrixEqual(r.log_likelihood, np.array([3.792]*5), 1e-2)
 
-        A = smoother.em_process_noise(r)
+        A = kf.em_process_noise(r)
 
         self.assertSequenceEqual(A.shape, (5,2,2))
         A0 = A[0,...]
         self.assertMatrixEqual(A0, A0.T)
         self.assertTrue(min(np.linalg.eig(A0)[0]) > 0)
 
-        B = smoother.em_observation_noise(r, training_matrix)
+        B = kf.em_observation_noise(r, training_matrix)
         self.assertSequenceEqual(B.shape, (5,1,1))
         self.assertTrue(min(list(B)) > 0)
 
@@ -304,13 +304,13 @@ class TestKalman(TestWithMatrices):
     def test_em_algorithm(self):
         training_matrix = np.ones((5,10))
 
-        smoother = simdkalman.KalmanFilter(
+        kf = simdkalman.KalmanFilter(
             state_transition = np.eye(2),
             process_noise = 0.1,
             measurement_model = np.array([[1,1]]),
             measurement_noise = 0.1)
 
-        r = smoother.em(training_matrix, n_iter=5, verbose=False)
+        r = kf.em(training_matrix, n_iter=5, verbose=False)
 
         self.assertSequenceEqual(r.process_noise.shape, (5,2,2))
         A0 = r.process_noise[0,...]

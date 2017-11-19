@@ -218,7 +218,7 @@ class KalmanFilter(object):
         self.measurement_model = measurement_model
         self.measurement_noise = measurement_noise
 
-    def predict(self, m, P):
+    def predict_next(self, m, P):
         return predict(m, P, self.state_transition, self.process_noise)
 
     def update_with_nan_check(self, m, P, y, compute_log_likelihood=False):
@@ -228,16 +228,15 @@ class KalmanFilter(object):
     def expected_observation(self, m):
         return expected_observation(m, self.measurement_model)
 
-    def smooth(self, m, P, ms, Ps):
+    def smooth_current(self, m, P, ms, Ps):
         return _smooth(m, P, self.state_transition, self.process_noise, ms, Ps)
 
-    # pylint: disable=W0621
-    def compute_matrix(self,
+    def compute(self,
         training_matrix,
         n_test,
         initial_value,
         initial_covariance,
-        smooth = True,
+        compute_smoother = True,
         store_filtered = False,
         store_means = True,
         store_covariances = True,
@@ -268,7 +267,7 @@ class KalmanFilter(object):
         m = initial_value
         P = initial_covariance
 
-        keep_filtered = store_filtered or smooth
+        keep_filtered = store_filtered or compute_smoother
 
         if compute_log_likelihood:
             result.log_likelihood = np.zeros((n_vars,))
@@ -307,9 +306,9 @@ class KalmanFilter(object):
             if store_gains:
                 result.filtered_gains[:,j,:,:] = K
 
-            m, P = self.predict(m, P)
+            m, P = self.predict_next(m, P)
 
-        if smooth:
+        if compute_smoother:
             # lazy trick to keep last filtered = last smoothed
             if store_observations:
                 result.smoothed_observations = 1*filtered_observations
@@ -331,7 +330,7 @@ class KalmanFilter(object):
                 P0 = filtered_covariances[:,j,:,:]
 
                 PsNext = Ps
-                ms, Ps, Cs = self.smooth(m0, P0, ms, Ps)
+                ms, Ps, Cs = self.smooth_current(m0, P0, ms, Ps)
 
                 if store_observations:
                     result.smoothed_observations[:,j] = np.ravel(self.expected_observation(ms))
@@ -369,7 +368,7 @@ class KalmanFilter(object):
                     if store_covariances:
                         result.predicted_covariances[:,j,:,:] = P
 
-                m, P = self.predict(m, P)
+                m, P = self.predict_next(m, P)
 
         return result
 
@@ -445,12 +444,12 @@ class KalmanFilter(object):
             print("--- EM algorithm %d iteration(s) to go" % n_iter)
             print(" * E step")
 
-        e_step = self.compute_matrix(
+        e_step = self.compute(
             training_matrix,
             n_test = 0,
             initial_value = initial_value,
             initial_covariance = initial_covariance,
-            smooth = True,
+            compute_smoother = True,
             store_filtered = False,
             store_means = True,
             store_covariances = True,
