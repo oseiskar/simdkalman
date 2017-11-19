@@ -234,8 +234,8 @@ class KalmanFilter(object):
     def compute(self,
         training_matrix,
         n_test,
-        initial_value,
-        initial_covariance,
+        initial_value = None,
+        initial_covariance = None,
         compute_smoother = True,
         store_filtered = False,
         store_means = True,
@@ -252,6 +252,13 @@ class KalmanFilter(object):
         n_vars = training_matrix.shape[0]
         n_measurements = training_matrix.shape[1]
         n_states = self.state_transition.shape[0]
+
+        if initial_value is None:
+            initial_value = np.zeros((n_states, 1))
+
+        if initial_covariance is None:
+            initial_covariance = ensure_matrix(
+                np.trace(ensure_matrix(self.measurement_model))*(5**2), n_states)
 
         initial_covariance = ensure_matrix(initial_covariance, n_states)
         initial_value = ensure_matrix(initial_value)
@@ -433,12 +440,6 @@ class KalmanFilter(object):
 
         if initial_value is None:
             initial_value = np.zeros((n_vars, n_states, 1))
-
-        if initial_covariance is None:
-            initial_covariance = ensure_matrix(np.trace(ensure_matrix(self.measurement_model))*(5**2), n_states)
-
-        if len(initial_covariance.shape) == 2:
-            initial_covariance = np.vstack([initial_covariance[np.newaxis,...]]*n_vars)
 
         if verbose:
             print("--- EM algorithm %d iteration(s) to go" % n_iter)

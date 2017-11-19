@@ -252,7 +252,6 @@ class TestKalman(TestWithMatrices):
         r = kf.compute(
             training_matrix,
             n_test = 4,
-            initial_value = 0,
             initial_covariance = 1.0)
 
         self.assertSequenceEqual(r.predicted_observations.shape, (5,4))
@@ -274,7 +273,6 @@ class TestKalman(TestWithMatrices):
         r = kf.compute(
             training_matrix,
             n_test = 4,
-            initial_value = np.array([[0],[0]]),
             initial_covariance = 1.0,
             compute_smoother = True,
             store_gains = True,
