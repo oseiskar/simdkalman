@@ -52,10 +52,23 @@ class Gaussian:
 
         return Gaussian(mean, cov)
 
+    def __str__(self):
+        s = "mean:\n  %s" % str(self.mean).replace("\n", "\n  ")
+        if self.cov is not None:
+            s += "\ncov:\n  %s" % str(self.cov).replace("\n", "\n  ")
+        return s
+
 class KalmanFilter(object):
     # pylint: disable=W0232
     class Result:
-        pass
+        def __str__(self):
+            s = ""
+            for k,v in self.__dict__.items():
+                if len(s) > 0:
+                    s += "\n"
+                s += "%s:\n" % k
+                s += "  " + str(v).replace("\n", "\n  ")
+            return s
 
     def __init__(self,
         state_transition,
@@ -159,6 +172,10 @@ class KalmanFilter(object):
         # pylint: disable=W0201
         result = KalmanFilter.Result()
 
+        single_sequence = len(training_matrix.shape) == 1
+        if single_sequence:
+            training_matrix = training_matrix[np.newaxis,:]
+
         n_vars = training_matrix.shape[0]
         n_measurements = training_matrix.shape[1]
         n_states = self.state_transition.shape[0]
@@ -171,12 +188,22 @@ class KalmanFilter(object):
             return Gaussian.empty(n_states, n_vars, n_measurements, cov)
 
         def auto_flat_observations(obs_gaussian):
+            r = obs_gaussian
             if n_obs == 1:
-                return obs_gaussian.unvectorize_state()
+                r = r.unvectorize_state()
+            if single_sequence:
+                r = r.unvectorize_vars()
+            return r
+
+        def auto_flat_states(obs_gaussian):
+            if single_sequence:
+                return obs_gaussian.unvectorize_vars()
             return obs_gaussian
 
         if initial_value is None:
             initial_value = np.zeros((n_states, 1))
+        if len(initial_value.shape) == 1:
+            initial_value = initial_value.reshape((n_states, 1))
 
         if initial_covariance is None:
             initial_covariance = ensure_matrix(
@@ -296,13 +323,18 @@ class KalmanFilter(object):
                 result.filtered.states = Gaussian(filtered_states.mean, None)
                 if covariances:
                     result.filtered.states.cov = filtered_states.cov
+                result.filtered.states = auto_flat_states(result.filtered.states)
             if observations:
                 result.filtered.observations = auto_flat_observations(
                     filtered_observations)
 
-        if smoothed and observations:
-            result.smoothed.observations = auto_flat_observations(
-                result.smoothed.observations)
+        if smoothed:
+            if observations:
+                result.smoothed.observations = auto_flat_observations(
+                    result.smoothed.observations)
+            if states:
+                result.smoothed.states = auto_flat_states(
+                    result.smoothed.states)
 
         if n_test > 0:
             result.predicted = KalmanFilter.Result()
@@ -332,6 +364,8 @@ class KalmanFilter(object):
             if observations:
                 result.predicted.observations = auto_flat_observations(
                     result.predicted.observations)
+            if states:
+                result.predicted.states = auto_flat_states(result.predicted.states)
 
         return result
 
@@ -390,6 +424,9 @@ class KalmanFilter(object):
 
         if n_iter <= 0:
             return self
+
+        if len(training_matrix.shape) == 1:
+            training_matrix = training_matrix[np.newaxis,:]
 
         n_vars, _ = training_matrix.shape
         n_states = self.state_transition.shape[0]

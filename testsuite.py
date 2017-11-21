@@ -12,7 +12,7 @@ class TestWithMatrices(unittest.TestCase):
         else:
             self.assertSequenceEqual(list(np.ravel(matA)), list(np.ravel(matB)))
 
-class TestKalman(TestWithMatrices):
+class TestPrimitives(TestWithMatrices):
 
     def test_ensure_matrix(self):
         self.assertMatrixEqual(primitives.ensure_matrix(3), np.eye(1)*3)
@@ -241,6 +241,8 @@ class TestKalman(TestWithMatrices):
         self.assertSequenceEqual(m.shape, (1,1))
         self.assertSequenceEqual(P.shape, (1,1))
 
+class TestKalman(TestWithMatrices):
+
     def test_train_and_predict_vectorized_kalman_filter_ema(self):
         training_matrix = np.ones((5,10))
 
@@ -349,6 +351,35 @@ class TestKalman(TestWithMatrices):
         B = r.observation_noise
         self.assertSequenceEqual(B.shape, (5,1,1))
         self.assertTrue(min(list(B)) > 0)
+
+    def test_one_dimensional(self):
+
+        training_matrix = np.array(range(10))
+
+        kf = simdkalman.KalmanFilter(
+            state_transition = np.eye(2),
+            process_noise = 0.1,
+            observation_model = np.array([[1,1]]),
+            observation_noise = 0.1)
+
+        r = kf.compute(
+            training_matrix,
+            n_test = 4,
+            initial_value = np.array([0,0]),
+            initial_covariance = 1.0,
+            smoothed = True,
+            gains = True,
+            log_likelihood = True)
+
+        self.assertSequenceEqual(r.predicted.observations.mean.shape, (4,))
+        self.assertSequenceEqual(r.smoothed.observations.mean.shape, training_matrix.shape)
+        self.assertSequenceEqual(r.predicted.states.mean.shape, (4,2))
+        self.assertSequenceEqual(r.smoothed.states.mean.shape, (10,2))
+        self.assertSequenceEqual(r.predicted.states.cov.shape, (4,2,2))
+        self.assertSequenceEqual(r.smoothed.states.cov.shape, (10,2,2))
+
+        kf_e = kf.em(training_matrix, n_iter=5, verbose=False)
+        self.assertSequenceEqual(kf_e.process_noise.shape, (1,2,2))
 
 if __name__ == '__main__':
     unittest.main()
