@@ -45,6 +45,28 @@ def compute_simd():
 
     return (r.states.mean, r.states.cov)
 
+def compute_non_simd():
+
+    mean = np.empty((N_SERIES,N_MEAS,2))
+    cov = np.empty((N_SERIES,N_MEAS,2,2))
+
+    for j in range(N_SERIES):
+        kf = simdkalman.KalmanFilter(
+            state_transition,
+            process_noise,
+            observation_model,
+            observation_noise)
+
+        r = kf.smooth(data[j,:],
+            initial_value = initial_values[j,:],
+            initial_covariance = initial_covariance,
+            observations = False)
+
+        mean[j,:,:] = r.states.mean
+        cov[j,:,:,:] = r.states.cov
+
+    return mean, cov
+
 def compute_pykalman():
 
     mean = np.empty((N_SERIES,N_MEAS,2))
@@ -68,6 +90,9 @@ def compute_pykalman():
 
 print "simdkalman"
 mean_simd, cov_simd = time_computation(compute_simd)
+
+print "simdkalman (non-simd)"
+mean_simd, cov_simd = time_computation(compute_non_simd)
 
 print "pykalman"
 mean_pk, cov_pk = time_computation(compute_pykalman)
