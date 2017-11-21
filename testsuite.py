@@ -354,7 +354,7 @@ class TestKalman(TestWithMatrices):
 
     def test_one_dimensional(self):
 
-        training_matrix = np.array(range(10))
+        training_matrix = range(10)
 
         kf = simdkalman.KalmanFilter(
             state_transition = np.eye(2),
@@ -365,14 +365,14 @@ class TestKalman(TestWithMatrices):
         r = kf.compute(
             training_matrix,
             n_test = 4,
-            initial_value = np.array([0,0]),
+            initial_value = [0,0],
             initial_covariance = 1.0,
             smoothed = True,
             gains = True,
             log_likelihood = True)
 
         self.assertSequenceEqual(r.predicted.observations.mean.shape, (4,))
-        self.assertSequenceEqual(r.smoothed.observations.mean.shape, training_matrix.shape)
+        self.assertSequenceEqual(r.smoothed.observations.mean.shape, (10,))
         self.assertSequenceEqual(r.predicted.states.mean.shape, (4,2))
         self.assertSequenceEqual(r.smoothed.states.mean.shape, (10,2))
         self.assertSequenceEqual(r.predicted.states.cov.shape, (4,2,2))

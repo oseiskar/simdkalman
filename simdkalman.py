@@ -172,6 +172,7 @@ class KalmanFilter(object):
         # pylint: disable=W0201
         result = KalmanFilter.Result()
 
+        training_matrix = ensure_matrix(training_matrix)
         single_sequence = len(training_matrix.shape) == 1
         if single_sequence:
             training_matrix = training_matrix[np.newaxis,:]
@@ -202,6 +203,7 @@ class KalmanFilter(object):
 
         if initial_value is None:
             initial_value = np.zeros((n_states, 1))
+        initial_value = ensure_matrix(initial_value)
         if len(initial_value.shape) == 1:
             initial_value = initial_value.reshape((n_states, 1))
 
@@ -425,6 +427,7 @@ class KalmanFilter(object):
         if n_iter <= 0:
             return self
 
+        training_matrix = ensure_matrix(training_matrix)
         if len(training_matrix.shape) == 1:
             training_matrix = training_matrix[np.newaxis,:]
 
