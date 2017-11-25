@@ -1,4 +1,100 @@
 # encoding: utf-8
+"""
+Following the notation in [1]_, the Kalman filter framework consists of
+a *dynamic model* (state transition model)
+
+.. math::
+
+    x_k = A x_{k-1} + q_{k-1}, \\qquad q_{k-1} \\sim N(0, Q)
+
+and a *measurement model* (observation model)
+
+.. math::
+
+    y_k = H x_k + r_k, \\qquad r_k \\sim N(0, R),
+
+where the vector :math:`x` is the (hidden) state of the system and
+:math:`y` is an observation. `A` and `H` are matrices of suitable shape
+and :math:`Q`, :math:`R` are positive-definite noise covariance matrices.
+
+
+.. [1] Simo Sarkkä (2013).
+   Bayesian Filtering and Smoothing. Cambridge University Press.
+   https://users.aalto.fi/~ssarkka/pub/cup_book_online_20131111.pdf
+
+
+Usage example
+---------------
+
+
+.. testsetup ::
+
+   import simdkalman
+   import numpy
+   import numpy.random
+   numpy.random.seed(0)
+
+Define model
+
+.. testcode ::
+
+   kf = simdkalman.KalmanFilter(
+       state_transition = [[1,1],[0,1]],           # matrix A
+       process_noise = numpy.diag([0.1, 0.01]),    # Q
+       observation_model = numpy.array([[1,0]]),   # H
+       observation_noise = 1.0)                    # R
+
+Generate some fake data
+
+.. testcode ::
+
+   # 100 independent time series
+   data = numpy.random.normal(size=(100, 200))
+
+   # with 10% of NaNs denoting missing values
+   data[numpy.random.uniform(size=data.shape) < 0.1] = numpy.nan
+
+
+Smooth all data
+
+.. testcode ::
+
+   smoothed = kf.smooth(data,
+                        initial_value = [1,0],
+                        initial_covariance = numpy.eye(2) * 0.5)
+
+   # second timeseries, third time step, hidden state x
+   print('mean')
+   print(smoothed.states.mean[1,2,:])
+
+   print('covariance')
+   print(smoothed.states.cov[1,2,:,:])
+
+.. testoutput ::
+
+    mean
+    [ 0.29311384 -0.06948961]
+    covariance
+    [[ 0.19959416 -0.00777587]
+     [-0.00777587  0.02528967]]
+
+Predict new data for a single series (1d case)
+
+.. testcode ::
+
+   predicted = kf.predict(data[1,:], 123)
+
+   # predicted observation y, third new time step
+   pred_mean = predicted.observations.mean[2]
+   pred_stdev = numpy.sqrt(predicted.observations.cov[2])
+
+   print('%g +- %g' % (pred_mean, pred_stdev))
+
+.. testoutput ::
+
+   1.71543 +- 1.65322
+
+"""
 import numpy as np
 # pylint: disable=W0401,W0614
 from primitives import *
@@ -65,28 +161,6 @@ class KalmanFilter(object):
     vectorized smoothing and filtering operations on multiple independent
     time series.
 
-    Following the notation in [1]_, the Kalman filter framework consists of
-    a *dynamic model* (state transition model)
-
-    .. math::
-
-        x_k = A x_{k-1} + q_{k-1}, \\qquad q_{k-1} \\sim N(0, Q)
-
-    and a *measurement model* (observation model)
-
-    .. math::
-
-        y_k = H x_k + r_k, \\qquad r_k \\sim N(0, R),
-
-    where the vector :math:`x` is the (hidden) state of the system and
-    :math:`y` is an observation. `A` and `H` are matrices of suitable shape
-    and :math:`Q`, :math:`R` are positive-definite noise covariance matrices.
-
-
-    .. [1] Simo Sarkkä (2013).
-       Bayesian Filtering and Smoothing. Cambridge University Press.
-       https://users.aalto.fi/~ssarkka/pub/cup_book_online_20131111.pdf
-
     As long as the shapes of the given parameters match reasonably according
     to the rules of matrix multiplication, this class is flexible in their
     exact nature accepting
@@ -109,7 +183,6 @@ class KalmanFilter(object):
 
     :param observation_noise:
         Observation noise (measurement noise covariance) matrix :math:`R`
-
     """
 
     # pylint: disable=W0232
@@ -201,10 +274,10 @@ class KalmanFilter(object):
 
         :param states: predict states :math:`x`?
         :type states: boolean
-        :param observations: boolean flag, predict observations :math:`y`?
+        :param observations: predict observations :math:`y`?
         :type observations: boolean
 
-        :param covariances: boolean flag, include covariances in predictions?
+        :param covariances: include covariances in predictions?
         :type covariances: boolean
 
         :rtype: Result object with fields
@@ -251,11 +324,11 @@ class KalmanFilter(object):
         :param initial_value: Initial value :math:`{\\mathbb E}[x_0]`
         :param initial_covariance: Initial uncertainty :math:`{\\rm Cov}[x_0]`
 
-        :param states: boolean flag, return smoothed states :math:`x`?
+        :param states: return smoothed states :math:`x`?
         :type states: boolean
-        :param observations: boolean flag, return smoothed observations :math:`y`?
+        :param observations: return smoothed observations :math:`y`?
         :type observations: boolean
-        :param covariances: boolean flag, include covariances results?
+        :param covariances: include covariances results?
         :type covariances: boolean
 
         :rtype: Result object with fields
