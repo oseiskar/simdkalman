@@ -1,3 +1,4 @@
+# encoding: utf-8
 import numpy as np
 # pylint: disable=W0401,W0614
 from primitives import *
@@ -59,6 +60,58 @@ class Gaussian:
         return s
 
 class KalmanFilter(object):
+    """
+    The main Kalman filter class providing convenient interfaces to
+    vectorized smoothing and filtering operations on multiple independent
+    time series.
+
+    Following the notation in [1]_, the Kalman filter framework consists of
+    a *dynamic model* (state transition model)
+
+    .. math::
+
+        x_k = A x_{k-1} + q_{k-1}, \\qquad q_{k-1} \\sim N(0, Q)
+
+    and a *measurement model* (observation model)
+
+    .. math::
+
+        y_k = H x_k + r_k, \\qquad r_k \\sim N(0, R),
+
+    where the vector :math:`x` is the (hidden) state of the system and
+    :math:`y` is an observation. `A` and `H` are matrices of suitable shape
+    and :math:`Q`, :math:`R` are positive-definite noise covariance matrices.
+
+
+    .. [1] Simo Sarkkä (2013).
+       Bayesian Filtering and Smoothing. Cambridge University Press.
+       https://users.aalto.fi/~ssarkka/pub/cup_book_online_20131111.pdf
+
+    As long as the shapes of the given parameters match reasonably according
+    to the rules of matrix multiplication, this class is flexible in their
+    exact nature accepting
+
+     * scalars: ``process_noise = 0.1``
+     * (2d) numpy matrices: ``process_noise = numpy.eye(2)``
+     * 2d arrays: ``observation_model = [[1,2]]``
+     * 3d arrays and matrices for vectorized computations. Unlike the other
+       options, this locks the shape of the inputs that can be processed
+       by the smoothing and prediction methods.
+
+    :param state_transition:
+        State transition matrix :math:`A`
+
+    :param process_noise:
+        Process noise (state transition covariance) matrix :math:`Q`
+
+    :param observation_model:
+        Observation model (measurement model) matrix :math:`H`
+
+    :param observation_noise:
+        Observation noise (measurement noise covariance) matrix :math:`R`
+
+    """
+
     # pylint: disable=W0232
     class Result:
         def __str__(self):
@@ -116,12 +169,49 @@ class KalmanFilter(object):
     def predict(self,
         training_matrix,
         n_test,
+        initial_value = None,
+        initial_covariance = None,
         states = True,
         observations = True,
         covariances = True,
-        initial_value = None,
-        initial_covariance = None,
         verbose = False):
+        """
+        Filter past data and predict a given number of future values.
+        The data can be given as either of
+
+          * 1d array, like ``[1,2,3,4]``. In this case, one Kalman filter is
+            used and the return value structure will contain an 1d array of
+            observations
+
+          * 2d matrix, whose each row is interpreted as an independent time
+            series, all of which are filtered independently with the same
+            Kalman model
+
+        Initial values and covariances can be given as scalars or 2d matrices
+        in which case the same initial states will be used for all rows or
+        3d arrays for different initial values.
+
+        :param training_matrix: Past data
+
+        :param n_test:  number of future steps to predict.
+        :type n_test: integer
+
+        :param initial_value: Initial value :math:`{\\mathbb E}[x_0]`
+        :param initial_covariance: Initial uncertainty :math:`{\\rm Cov}[x_0]`
+
+        :param states: predict states :math:`x`?
+        :type states: boolean
+        :param observations: boolean flag, predict observations :math:`y`?
+        :type observations: boolean
+
+        :param covariances: boolean flag, include covariances in predictions?
+        :type covariances: boolean
+
+        :rtype: Result object with fields
+            ``states`` and ``observations``, if the respective parameter flags
+            are set to True. Both are ``Gaussian`` result objects with fields
+            ``mean`` and ``cov`` (if the *covariances* flag is True)
+        """
 
         return self.compute(
             training_matrix,
@@ -135,16 +225,47 @@ class KalmanFilter(object):
             verbose = verbose).predicted
 
     def smooth(self,
-        training_matrix,
+        data,
+        initial_value = None,
+        initial_covariance = None,
         observations = True,
         states = True,
         covariances = True,
-        initial_value = None,
-        initial_covariance = None,
         verbose = False):
+        """
+        Smooth given data, which can be either
+
+          * 1d array, like ``[1,2,3,4]``. In this case, one Kalman filter is
+            used and the return value structure will contain an 1d array of
+            ``observations`` (both ``.mean``  and ``.cov`` will be 1d).
+
+          * 2d matrix, whose each row is interpreted as an independent time
+            series, all of which are smoothed independently with the same
+            Kalman model
+
+        Initial values and covariances can be given as scalars or 2d matrices
+        in which case the same initial states will be used for all rows or
+        3d arrays for different initial values.
+
+        :param data: 1d or 2d data, see above
+        :param initial_value: Initial value :math:`{\\mathbb E}[x_0]`
+        :param initial_covariance: Initial uncertainty :math:`{\\rm Cov}[x_0]`
+
+        :param states: boolean flag, return smoothed states :math:`x`?
+        :type states: boolean
+        :param observations: boolean flag, return smoothed observations :math:`y`?
+        :type observations: boolean
+        :param covariances: boolean flag, include covariances results?
+        :type covariances: boolean
+
+        :rtype: Result object with fields
+            ``states`` and ``observations``, if the respective parameter flags
+            are set to True. Both are ``Gaussian`` result objects with fields
+            ``mean`` and ``cov`` (if the *covariances* flag is True)
+        """
 
         return self.compute(
-            training_matrix,
+            data,
             0,
             initial_value,
             initial_covariance,
@@ -168,6 +289,36 @@ class KalmanFilter(object):
         gains = False,
         log_likelihood = False,
         verbose = False):
+        """
+        Smoothing, filtering and prediction at the same time. Used internally
+        by other methods, but can also be used directly if, e.g., both smoothed
+        and predicted data is wanted.
+
+        See **smooth** and **precit** for explanation of the common parameters.
+        With this method, there also exist the following flags.
+
+        :param smoothed: compute Kalman smoother (used by **smooth**)
+        :type smoothed: boolean
+        :param filtered: return (one-way) filtered data
+        :type filtered: boolean
+        :param likelihoods: return likelihoods of each step
+        :type likelihoods: boolean
+        :param gains: return Kalman gains and pairwise covariances (used by
+            the EM algorithm)
+        :type gains: boolean
+        :param log_likelihood: return the log-likelihood(s) for the entire
+            series. If matrix data is given, this will be a vector where each
+            element is the log-likelihood of a single row.
+        :type log_likelihood: boolean
+
+        :rtype: result object whose fields depend on of the above parameter
+            flags are True. The possible values are:
+            ``smoothed`` (the return value of **smooth**),
+            ``filtered`` (like *smoothed*),
+            ``predicted`` (the return value of **predict** if ``n_test > 0``)
+            ``gains``, ``pairwise_covariances``, ``likelihoods`` and
+            ``log_likelihood``.
+        """
 
         # pylint: disable=W0201
         result = KalmanFilter.Result()
