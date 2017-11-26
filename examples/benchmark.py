@@ -88,16 +88,16 @@ def compute_pykalman():
 
     return mean, cov
 
-print "simdkalman"
+print("simdkalman")
 mean_simd, cov_simd = time_computation(compute_simd)
 
-print "simdkalman (non-simd)"
+print("simdkalman (non-simd)")
 mean_simd, cov_simd = time_computation(compute_non_simd)
 
-print "pykalman"
+print("pykalman")
 mean_pk, cov_pk = time_computation(compute_pykalman)
 
-print "difference"
+print("difference")
 print("mean: %g" % (np.linalg.norm(mean_simd - mean_pk) / np.linalg.norm(mean_pk)))
 print("cov: %g" % (np.linalg.norm(cov_simd - cov_pk) / np.linalg.norm(cov_pk)))
 

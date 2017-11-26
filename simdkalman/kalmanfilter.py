@@ -97,7 +97,7 @@ Predict new data for a single series (1d case)
 """
 import numpy as np
 # pylint: disable=W0401,W0614
-from primitives import *
+from simdkalman.primitives import *
 
 class Gaussian:
     def __init__(self, mean, cov):

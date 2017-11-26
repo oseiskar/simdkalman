@@ -1,1 +1,4 @@
 *.pyc
+doc/build/
+venvs/
+*.egg-info

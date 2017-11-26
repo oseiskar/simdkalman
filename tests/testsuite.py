@@ -1,6 +1,9 @@
+import os, sys
 import unittest
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import simdkalman
-import primitives
+import simdkalman.primitives as primitives
 import numpy as np
 
 class TestWithMatrices(unittest.TestCase):
