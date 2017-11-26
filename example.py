@@ -1,3 +1,8 @@
+"""
+Smoothing and prediction examples with figures. Needs matplotlib
+to display the graphics.
+"""
+
 import simdkalman
 import numpy as np
 import numpy.random as random
