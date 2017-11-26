@@ -1,5 +1,5 @@
 
-# SIMD Kalman
+# SIMD Kalman [![Build Status](https://travis-ci.org/oseiskar/simdkalman.svg?branch=master)](https://travis-ci.org/oseiskar/simdkalman)
 
 Fast Kalman filters in Python leveraging single-instruction multiple-data
 vectorization. That is, running _n_ similar Kalman filters on _n_
@@ -28,6 +28,7 @@ According to `benchmark.py`. This can be up to 100x faster than
 [pykalman](https://pykalman.github.io/).
 
 ### TODO
- - [ ] documentation
+
  - [ ] multi-dimensional observations
  - [ ] PyPI package
+ - [ ] documentation (site?)
