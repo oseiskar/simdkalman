@@ -15,6 +15,9 @@ Terminology
 
 .. automodule:: simdkalman
 
+For a complete code example with figures, see:
+https://github.com/oseiskar/simdkalman/blob/master/examples/example.py
+
 Class documentation
 -------------------
 
