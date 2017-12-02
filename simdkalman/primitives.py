@@ -1,4 +1,8 @@
+"""
+Low-level Kalman filter computation steps with multi-dimensional input arrays
+"""
 import numpy as np
+from functools import wraps
 
 def ddot(A, B):
     "Matrix multiplication over last two axes"
@@ -10,12 +14,15 @@ def ddot_t_right(A, B):
     return np.einsum('...ij,...kj->...ik', A, B)
 
 def douter(a, b):
+    "Outer product, last two axes"
     return a * b.transpose((0,2,1))
 
 def dinv(A):
+    "Matrix inverse applied to last two axes"
     return np.linalg.inv(A)
 
 def autoshape(func):
+    "Automatically shape arguments and return values"
     def to_3d_array(v):
         if len(v.shape) == 1:
             return v[np.newaxis,:,np.newaxis]
@@ -24,6 +31,7 @@ def autoshape(func):
         else:
             return v
 
+    @wraps(func)
     def reshaped_func(*args, **kwargs):
         any_tensor = any([len(x.shape) > 2 for x in args])
         outputs = func(*[to_3d_array(a) for a in args], **kwargs)
@@ -35,6 +43,19 @@ def autoshape(func):
 
 @autoshape
 def predict(mean, covariance, state_transition, process_noise):
+    """
+    Kalman filter prediction step
+
+    :param mean: :math:`{\\mathbb E}[x_{j-1}]`,
+        the filtered mean form the previous step
+    :param covariance: :math:`{\\rm Cov}[x_{j-1}]`,
+        the filtered covariance form the previous step
+    :param state_transition: matrix :math:`A`
+    :param process_noise: matrix :math:`Q`
+
+    :rtype: ``(prior_mean, prior_cov)`` predicted mean and covariance
+        :math:`{\\mathbb E}[x_j]`, :math:`{\\rm Cov}[x_j]`
+    """
 
     n = mean.shape[1]
 
@@ -90,6 +111,23 @@ def _update(prior_mean, prior_covariance, observation_model, observation_noise, 
     return posterior_mean, posterior_covariance
 
 def update(prior_mean, prior_covariance, observation_model, observation_noise, measurement):
+    """
+    Kalman filter update step
+
+    :param prior_mean: :math:`{\\mathbb E}[x_j|y_1,\\ldots,y_{j-1}]`,
+        the prior mean of :math:`x_j`
+    :param prior_covariance: :math:`{\\rm Cov}[x_j|y_1,\\ldots,y_{j-1}]`,
+        the prior covariance of :math:`x_j`
+    :param observation_model: matrix :math:`H`
+    :param observation_noise: matrix :math:`R`
+    :param measurement: observation :math:`y_j`
+
+    :rtype: ``(posterior_mean, posterior_covariance)``
+        posterior mean and covariance
+        :math:`{\\mathbb E}[x_j|y_1,\\ldots,y_j]`,
+        :math:`{\\rm Cov}[x_j|y_1,\\ldots,y_j]`
+        after observing :math:`y_j`
+    """
     return  _update(prior_mean, prior_covariance, observation_model, observation_noise, measurement)[:2]
 
 @autoshape
@@ -121,10 +159,37 @@ def priv_smooth(posterior_mean, posterior_covariance, state_transition, process_
     return smooth_mean, smooth_covariance, C
 
 def smooth(posterior_mean, posterior_covariance, state_transition, process_noise, next_smooth_mean, next_smooth_covariance):
+    """
+    Kalman smoother backwards step
+
+    :param posterior_mean: :math:`{\\mathbb E}[x_j|y_1,\\ldots,y_j]`,
+        the filtered mean of :math:`x_j`
+    :param posterior_covariance: :math:`{\\rm Cov}[x_j|y_1,\\ldots,y_j]`,
+        the filtered covariance of :math:`x_j`
+    :param state_transition: matrix :math:`A`
+    :param process_noise: matrix :math:`Q`
+    :param next_smooth_mean:
+        :math:`{\\mathbb E}[x_{j+1}|y_1,\\ldots,y_T]`
+    :param next_smooth_covariance:
+        :math:`{\\rm Cov}[x_{j+1}|y_1,\\ldots,y_T]`
+
+    :rtype: ``(smooth_mean, smooth_covariance, smoothing_gain)``
+        smoothed mean :math:`{\\mathbb E}[x_j|y_1,\\ldots,y_T]`,
+        and covariance :math:`{\\rm Cov}[x_j|y_1,\\ldots,y_T]`
+        & smoothing gain :math:`C`
+    """
     return priv_smooth(posterior_mean, posterior_covariance, state_transition, process_noise, next_smooth_mean, next_smooth_covariance)[:2]
 
 @autoshape
 def expected_observation(mean, observation_model):
+    """
+    Expected value of observation :math:`y`
+
+    :param mean: :math:`{\\mathbb E}[x]`
+    :param observation_model: matrix :math:`H`
+
+    :rtype: :math:`{\\mathbb E}[y]`
+    """
 
     n = mean.shape[1]
     m = observation_model.shape[1]
@@ -135,6 +200,15 @@ def expected_observation(mean, observation_model):
 
 @autoshape
 def observation_covariance(covariance, observation_model, observation_noise):
+    """
+    Covariance of observation :math:`y`
+
+    :param covariance: :math:`{\\rm Cov}[x]`
+    :param observation_model: matrix :math:`H`
+    :param observation_noise: matrix :math:`R`
+
+    :rtype: :math:`{\\rm Cov}[y]`
+    """
 
     n = covariance.shape[1]
     m = observation_model.shape[1]
@@ -183,6 +257,10 @@ def update_with_nan_check(
         observation_model,
         observation_noise,
         measurement):
+    """
+    Kalman filter update with a check for NaN observations. Like ``update`` but
+    returns ``(prior_mean, prior_covariance)`` if ``measurement`` is NaN
+    """
 
     return priv_update_with_nan_check(
         prior_mean,

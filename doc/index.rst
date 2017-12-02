@@ -25,6 +25,18 @@ Class documentation
 .. autoclass:: simdkalman.KalmanFilter
    :members:
 
+Primitives
+----------
+
+.. automodule:: simdkalman.primitives
+
+.. autofunction:: predict(mean, covariance, state_transition, process_noise)
+.. autofunction:: update
+.. autofunction:: update_with_nan_check
+.. autofunction:: smooth
+.. autofunction:: expected_observation(mean, observation_model)
+.. autofunction:: observation_covariance(covariance, observation_model, observation_noise)
+
 Change log
 -----------
 
