@@ -107,15 +107,6 @@ class Gaussian:
             self.cov = cov
 
     @staticmethod
-    def zeros(n_states, n_vars, n_measurements, cov=True):
-        mean = np.zeros((n_vars, n_measurements, n_states))
-        if cov:
-            cov = np.zeros((n_vars, n_measurements, n_states, n_states))
-        else:
-            cov = None
-        return Gaussian(mean, cov)
-
-    @staticmethod
     def empty(n_states, n_vars, n_measurements, cov=True):
         mean = np.empty((n_vars, n_measurements, n_states))
         if cov:
@@ -222,21 +213,76 @@ class KalmanFilter(object):
         self.observation_noise = observation_noise
 
     def predict_next(self, m, P):
+        """
+        Single prediction step
+
+        :param m: :math:`{\\mathbb E}[x_{j-1}]`, the previous mean
+        :param P: :math:`{\\rm Cov}[x_{j-1}]`, the previous covariance
+
+        :rtype: ``(prior_mean, prior_cov)`` predicted mean and covariance
+            :math:`{\\mathbb E}[x_j]`, :math:`{\\rm Cov}[x_j]`
+        """
         return predict(m, P, self.state_transition, self.process_noise)
 
-    def update_with_nan_check(self, m, P, y, log_likelihood=False):
+    def update(self, m, P, y, log_likelihood=False):
+        """
+        Single update step with NaN check.
+
+        :param m: :math:`{\\mathbb E}[x_j|y_1,\\ldots,y_{j-1}]`,
+            the prior mean of :math:`x_j`
+        :param P: :math:`{\\rm Cov}[x_j|y_1,\\ldots,y_{j-1}]`,
+            the prior covariance of :math:`x_j`
+        :param y: observation :math:`y_j`
+        :param log_likelihood: compute log-likelihood?
+        :type states: boolean
+
+        :rtype: ``(posterior_mean, posterior_covariance, log_likelihood)``
+            posterior mean :math:`{\\mathbb E}[x_j|y_1,\\ldots,y_j]`
+            & covariance :math:`{\\rm Cov}[x_j|y_1,\\ldots,y_j]`
+            and, if requested, log-likelihood. If :math:`y_j` is NaN, returns
+            the prior mean and covariance instead
+        """
         return priv_update_with_nan_check(m, P,
             self.observation_model, self.observation_noise, y,
             log_likelihood=log_likelihood)
 
     def expected_observation(self, m):
+        """
+        Expected value of observation :math:`y` for a given state mean
+
+        :param m: :math:`{\\mathbb E}[x]`
+        :rtype: :math:`{\\mathbb E}[y]`
+        """
         return expected_observation(m, self.observation_model)
 
     def observation_covariance(self, P):
+        """
+        Covariance of observation :math:`y` for a given state covariance
+
+        :param m: :math:`{\\rm Cov}[x]`
+        :rtype: :math:`{\\rm Cov}[y]`
+        """
         return observation_covariance(P,
             self.observation_model, self.observation_noise)
 
     def smooth_current(self, m, P, ms, Ps):
+        """
+        Simgle Kalman smoother backwards step
+
+        :param m: :math:`{\\mathbb E}[x_j|y_1,\\ldots,y_j]`,
+            the filtered mean of :math:`x_j`
+        :param P: :math:`{\\rm Cov}[x_j|y_1,\\ldots,y_j]`,
+            the filtered covariance of :math:`x_j`
+        :param ms:
+            :math:`{\\mathbb E}[x_{j+1}|y_1,\\ldots,y_T]`
+        :param Ps:
+            :math:`{\\rm Cov}[x_{j+1}|y_1,\\ldots,y_T]`
+
+        :rtype: ``(smooth_mean, smooth_covariance, smoothing_gain)``
+            smoothed mean :math:`{\\mathbb E}[x_j|y_1,\\ldots,y_T]`,
+            and covariance :math:`{\\rm Cov}[x_j|y_1,\\ldots,y_T]`
+            & smoothing gain :math:`C`
+        """
         return priv_smooth(m, P,
             self.state_transition, self.process_noise, ms, Ps)
 
@@ -473,7 +519,7 @@ class KalmanFilter(object):
 
             y = training_matrix[:,j].reshape((n_vars, 1, 1))
 
-            tup = self.update_with_nan_check(m, P, y, log_likelihood)
+            tup = self.update(m, P, y, log_likelihood)
             m, P, K = tup[:3]
             if log_likelihood:
                 l = tup[-1]
