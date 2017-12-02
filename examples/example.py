@@ -1,6 +1,9 @@
 """
 Smoothing and prediction examples with figures. Needs matplotlib
 to display the graphics.
+
+Example output:
+https://github.com/oseiskar/simdkalman/blob/master/doc/example.png
 """
 
 import simdkalman

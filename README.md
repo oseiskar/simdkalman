@@ -26,6 +26,7 @@ pred = kf.predict(data, 15)
 ```
 See `examples/example.py` for a more comprehensive example and
 [ReadTheDocs](https://simdkalman.readthedocs.io/) for the full documentation.
+For the changelog, see [releases page](https://github.com/oseiskar/simdkalman/releases)
 
 According to `examples/benchmark.py`. This can be up to 100x faster than
 [pykalman](https://pykalman.github.io/).

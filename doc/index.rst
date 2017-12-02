@@ -1,4 +1,3 @@
-
 simdkalman documentation
 ======================================
 
@@ -9,6 +8,8 @@ simdkalman documentation
 **Source code**:  https://github.com/oseiskar/simdkalman
 
 **License**: `MIT <https://github.com/oseiskar/simdkalman/blob/master/LICENSE.txt>`_
+
+.. image:: example.png
 
 Terminology
 ------------
@@ -23,3 +24,8 @@ Class documentation
 
 .. autoclass:: simdkalman.KalmanFilter
    :members:
+
+Change log
+-----------
+
+See https://github.com/oseiskar/simdkalman/releases
