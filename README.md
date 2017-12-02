@@ -42,4 +42,3 @@ According to `benchmark.py`. This can be up to 100x faster than
  - [ ] multi-dimensional observations
  - [ ] PyPI package
  - [ ] documentation (site?)
- - [ ] an Open Source license

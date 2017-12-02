@@ -7,7 +7,7 @@ setup(
     url='https://github.com/oseiskar/simdkalman',
     author='Otto Seiskari',
 
-    #license='', # TODO
+    license='MIT',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
@@ -20,6 +20,9 @@ setup(
         # same as "pykalman"
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
+
+        # MIT license
+        'License :: OSI Approved :: MIT License',
 
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
