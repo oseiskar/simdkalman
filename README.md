@@ -1,5 +1,7 @@
 
-# SIMD Kalman [![Build Status](https://travis-ci.org/oseiskar/simdkalman.svg?branch=master)](https://travis-ci.org/oseiskar/simdkalman)
+# SIMD Kalman
+[![Build Status](https://travis-ci.org/oseiskar/simdkalman.svg?branch=master)](https://travis-ci.org/oseiskar/simdkalman)
+[![Docs Status](https://readthedocs.org/projects/simdkalman/badge/?version=latest)](http://simdkalman.readthedocs.io/en/latest/?badge=latest)
 
 Fast Kalman filters in Python leveraging single-instruction multiple-data
 vectorization. That is, running _n_ similar Kalman filters on _n_
