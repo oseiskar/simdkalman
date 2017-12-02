@@ -22,7 +22,8 @@ smoothed = kf.smooth(data)
 # predict new data
 pred = kf.predict(data, 15)
 ```
-See `examples/example.py` for more details.
+See `examples/example.py` for a more comprehensive example and
+[ReadTheDocs](https://simdkalman.readthedocs.io/) for the full documentation.
 
 According to `examples/benchmark.py`. This can be up to 100x faster than
 [pykalman](https://pykalman.github.io/).
@@ -84,5 +85,4 @@ Test installation from the test site with
 ### TODO
 
  - [ ] multi-dimensional observations
- - [ ] documentation site
  - [ ] support numpy versions < 1.10

@@ -29,7 +29,6 @@ Usage example
 
 .. testsetup ::
 
-   import simdkalman
    import numpy
    import numpy.random
    numpy.random.seed(0)
@@ -37,6 +36,8 @@ Usage example
 Define model
 
 .. testcode ::
+
+   import simdkalman
 
    kf = simdkalman.KalmanFilter(
        state_transition = [[1,1],[0,1]],           # matrix A

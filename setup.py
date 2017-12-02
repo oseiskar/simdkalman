@@ -1,9 +1,18 @@
 from setuptools import setup, find_packages
+from os import path
+from codecs import open
+
+here = path.abspath(path.dirname(__file__))
+
+# Get the long description from the README file
+with open(path.join(here, 'doc', 'DESCRIPTION.rst'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='simdkalman',
     version='0.9.0',
     description='Kalman filters vectorized as Single Instruction, Multiple Data',
+    long_description=long_description,
     url='https://github.com/oseiskar/simdkalman',
     author='Otto Seiskari',
 
@@ -29,7 +38,7 @@ setup(
         'Programming Language :: Python :: 3'
     ],
     keywords='kalman filter smoothing em timeseries',
-    packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+    packages=find_packages(exclude=['contrib', 'doc', 'tests']),
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
