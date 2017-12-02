@@ -2,3 +2,5 @@
 doc/build/
 venvs/
 *.egg-info
+build/
+dist/

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='simdkalman',
-    version='1.0.0',
+    version='0.9.0',
     description='Kalman filters vectorized as Single Instruction, Multiple Data',
     url='https://github.com/oseiskar/simdkalman',
     author='Otto Seiskari',
@@ -35,7 +35,7 @@ setup(
     # this:
     #   py_modules=["my_module"],
 
-    install_requires=['numpy'],
+    install_requires=['numpy>=1.10.0'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

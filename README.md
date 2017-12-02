@@ -37,8 +37,41 @@ According to `benchmark.py`. This can be up to 100x faster than
  1. `./run-tests.sh`
  1. `deactivate` virtualenv
 
+### Distribution
+
+(personal howto)
+
+Once:
+
+ 1. create an account in https://testpypi.python.org/pypi and
+    https://pypi.python.org/pypi
+ 1. create `~/.pypirc` as described [here](https://packaging.python.org/guides/migrating-to-pypi-org)
+ 1. `sudo pip install twine`
+ 1. create testing virutalenvs:
+    * `virtualenv venvs/test-python2`
+    * `python3 -m venv venvs/test-python3`
+
+Each distribution:
+
+    python setup.py bdist_wheel
+    # test PyPI site
+    twine upload --repository testpypi dist/simdkalman-VERSION*
+    # the real thing
+    twine upload dist/simdkalman-VERSION*
+
+Test installation from the test site with
+
+    source venvs/test-pythonNNN/bin/activate
+    pip install \
+        --index-url https://test.pypi.org/simple/ \
+        --extra-index-url https://pypi.org/simple \
+        simdkalman --upgrade
+    pip install matplotlib
+    python examples/example.py
+    deactivate
+
 ### TODO
 
  - [ ] multi-dimensional observations
- - [ ] PyPI package
- - [ ] documentation (site?)
+ - [ ] documentation site
+ - [ ] support numpy versions < 1.10
