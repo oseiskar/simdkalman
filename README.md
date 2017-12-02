@@ -27,6 +27,16 @@ See `example.py` for more details.
 According to `benchmark.py`. This can be up to 100x faster than
 [pykalman](https://pykalman.github.io/).
 
+### Development
+
+ 1. Create virtualenv
+    * Python 2: `virtualenv venvs/python2`
+    * Python 3: `python3 -m venv venvs/python3`
+ 1. Activate virtualenv: `source venvs/pythonNNN/bin/activate`
+ 1. Install locally `pip install -e .[dev]`
+ 1. `./run-tests.sh`
+ 1. `deactivate` virtualenv
+
 ### TODO
 
  - [ ] multi-dimensional observations
