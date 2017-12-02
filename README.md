@@ -22,10 +22,14 @@ smoothed = kf.smooth(data)
 # predict new data
 pred = kf.predict(data, 15)
 ```
-See `example.py` for more details.
+See `examples/example.py` for more details.
 
-According to `benchmark.py`. This can be up to 100x faster than
+According to `examples/benchmark.py`. This can be up to 100x faster than
 [pykalman](https://pykalman.github.io/).
+
+### Installation
+
+    pip install simdkalman
 
 ### Development
 
@@ -53,11 +57,16 @@ Once:
 
 Each distribution:
 
+    # first, set version in setup.py
+    # then create distributable package
     python setup.py bdist_wheel
     # test PyPI site
     twine upload --repository testpypi dist/simdkalman-VERSION*
     # the real thing
     twine upload dist/simdkalman-VERSION*
+    # update git tags
+    git tag VERSION -m "released VERSION"
+    git push --tags
 
 Test installation from the test site with
 
@@ -66,6 +75,8 @@ Test installation from the test site with
         --index-url https://test.pypi.org/simple/ \
         --extra-index-url https://pypi.org/simple \
         simdkalman --upgrade
+    # or the real thing with just
+    # pip install simdkalman
     pip install matplotlib
     python examples/example.py
     deactivate
