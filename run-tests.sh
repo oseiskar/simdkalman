@@ -10,4 +10,5 @@ pylint simdkalman
 
 # documentation
 cd doc
+make html
 make doctest
