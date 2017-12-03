@@ -1,5 +1,10 @@
 """
-Low-level Kalman filter computation steps with multi-dimensional input arrays
+Low-level Kalman filter computation steps with multi-dimensional input arrays.
+Unlike with the `KalmanFilter <index.html#simdkalman.KalmanFilter>`_ class,
+all inputs must be numpy arrays. However, their dimensions can flexibly vary
+form 1 to 3 as long as they are reasonable from the point of view of matrix
+multiplication and numpy broadcasting rules. Matrix operations are applied on
+the *last* two axes of the arrays.
 """
 import numpy as np
 from functools import wraps

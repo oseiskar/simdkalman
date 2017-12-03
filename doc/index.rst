@@ -25,17 +25,14 @@ Class documentation
 .. autoclass:: simdkalman.KalmanFilter
    :members:
 
+
 Primitives
-----------
+-------------
 
-.. automodule:: simdkalman.primitives
+The ``simdkalman.primitives`` module contains low-level Kalman filter computation
+steps with multi-dimensional input arrays. See `this page <primitives.html>`_
+for full documentation.
 
-.. autofunction:: predict(mean, covariance, state_transition, process_noise)
-.. autofunction:: update
-.. autofunction:: update_with_nan_check
-.. autofunction:: smooth
-.. autofunction:: expected_observation(mean, observation_model)
-.. autofunction:: observation_covariance(covariance, observation_model, observation_noise)
 
 Change log
 -----------
