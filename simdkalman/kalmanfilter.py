@@ -194,12 +194,12 @@ class KalmanFilter(object):
         observation_model,
         observation_noise):
 
-        n_obs = 1
         state_transition = ensure_matrix(state_transition)
         n_states = state_transition.shape[0]
 
         process_noise = ensure_matrix(process_noise, n_states)
         observation_model = ensure_matrix(observation_model)
+        n_obs = observation_model.shape[-2]
         observation_noise = ensure_matrix(observation_noise, n_obs)
 
         assert(state_transition.shape[-2:] == (n_states, n_states))
@@ -445,7 +445,7 @@ class KalmanFilter(object):
         n_vars = training_matrix.shape[0]
         n_measurements = training_matrix.shape[1]
         n_states = self.state_transition.shape[0]
-        n_obs = 1 # should also allow 3d training data...
+        n_obs = self.observation_model.shape[-2]
 
         def empty_gaussian(
             n_states=n_states,
@@ -511,7 +511,7 @@ class KalmanFilter(object):
             if verbose:
                 print('filtering %d/%d' % (j+1, n_measurements))
 
-            y = training_matrix[:,j].reshape((n_vars, 1, 1))
+            y = training_matrix[:,j,...].reshape((n_vars, n_obs, 1))
 
             tup = self.update(m, P, y, log_likelihood)
             m, P, K = tup[:3]
@@ -661,8 +661,9 @@ class KalmanFilter(object):
 
     def em_observation_noise(self, result, training_matrix, verbose=False):
         n_vars, n_measurements, _ = result.smoothed.states.mean.shape
+        n_obs = self.observation_model.shape[-2]
 
-        res = np.zeros((n_vars,))
+        res = np.zeros((n_vars,n_obs,n_obs))
         n_not_nan = np.zeros((n_vars,))
 
         for j in range(n_measurements):
@@ -672,17 +673,17 @@ class KalmanFilter(object):
             ms = result.smoothed.states.mean[:,j,:][...,np.newaxis]
             Ps = result.smoothed.states.cov[:,j,...]
 
-            y = training_matrix[:,j].reshape((n_vars, 1, 1))
-            not_nan = np.ravel(~np.isnan(y))
+            y = training_matrix[:,j,...].reshape((n_vars, n_obs, 1))
+            not_nan = np.ravel(np.all(~np.isnan(y), axis=1))
             n_not_nan += not_nan
             err = y - ddot(self.observation_model, ms)
 
             r = douter(err, err) + ddot(self.observation_model, ddot_t_right(Ps, self.observation_model))
-            res[not_nan] += np.ravel(r)[not_nan]
+            res[not_nan,...] += r[not_nan,...]
 
-        res /= np.maximum(n_not_nan, 1)
+        res /= np.maximum(n_not_nan, 1)[:, np.newaxis, np.newaxis]
 
-        return res.reshape((n_vars,1,1))
+        return res.reshape((n_vars,n_obs,n_obs))
 
     def em(self, training_matrix, n_iter=5, initial_value=None, initial_covariance=None, verbose=False):
 
@@ -693,7 +694,7 @@ class KalmanFilter(object):
         if len(training_matrix.shape) == 1:
             training_matrix = training_matrix[np.newaxis,:]
 
-        n_vars, _ = training_matrix.shape
+        n_vars = training_matrix.shape[0]
         n_states = self.state_transition.shape[0]
 
         if initial_value is None:

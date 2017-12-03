@@ -91,5 +91,5 @@ Test installation from the test site with
 
 ### TODO
 
- - [ ] multi-dimensional observations
  - [ ] support numpy versions < 1.10
+ - [ ] EM algorithm documentation and options

@@ -322,6 +322,7 @@ class TestKalman(TestWithMatrices):
 
     def test_smooth_helper_kalman_filter_2_states(self):
         training_matrix = np.ones((5,10))
+        training_matrix[1,1] = np.nan
 
         kf = simdkalman.KalmanFilter(
             state_transition = np.eye(2),
@@ -334,6 +335,27 @@ class TestKalman(TestWithMatrices):
         self.assertSequenceEqual(r.observations.mean.shape, training_matrix.shape)
         self.assertSequenceEqual(r.states.mean.shape, (5,10,2))
         self.assertSequenceEqual(r.states.cov.shape, (5,10,2,2))
+
+    def test_multi_dimensional_observations(self):
+        training_matrix = np.ones((5,10,2))
+        training_matrix[1,1,1] = np.nan
+
+        kf = simdkalman.KalmanFilter(
+            state_transition = np.eye(3),
+            process_noise = 0.1,
+            observation_model = np.array([[1,1,0],[0,0,1]]),
+            observation_noise = np.eye(2))
+
+        r = kf.compute(training_matrix, 15)
+
+        self.assertSequenceEqual(
+            r.smoothed.observations.mean.shape,
+            training_matrix.shape)
+
+        self.assertSequenceEqual(r.smoothed.states.mean.shape, (5,10,3))
+        self.assertSequenceEqual(r.smoothed.states.cov.shape, (5,10,3,3))
+        self.assertSequenceEqual(r.predicted.observations.mean.shape, (5,15,2))
+        self.assertSequenceEqual(r.predicted.observations.cov.shape, (5,15,2,2))
 
     def test_em_algorithm(self):
         training_matrix = np.ones((5,10))
@@ -354,6 +376,27 @@ class TestKalman(TestWithMatrices):
         B = r.observation_noise
         self.assertSequenceEqual(B.shape, (5,1,1))
         self.assertTrue(min(list(B)) > 0)
+
+    def test_em_algorithm_multi_dimensional_observations(self):
+        training_matrix = np.ones((5,10,2))
+        training_matrix[1,1,1] = np.nan
+
+        kf = simdkalman.KalmanFilter(
+            state_transition = np.eye(2),
+            process_noise = 0.1,
+            observation_model = np.array([[1,1], [0,1]]),
+            observation_noise = 0.1)
+
+        r = kf.em(training_matrix, n_iter=5, verbose=False)
+
+        self.assertSequenceEqual(r.process_noise.shape, (5,2,2))
+        A0 = r.process_noise[0,...]
+        self.assertMatrixEqual(A0, A0.T, epsilon=1e-8)
+        self.assertTrue(min(np.linalg.eig(A0)[0]) > 0)
+
+        B = r.observation_noise
+        self.assertSequenceEqual(B.shape, (5,2,2))
+        self.assertTrue(min(np.linalg.eig(B[0,...])[0]) > 0)
 
     def test_one_dimensional(self):
 
