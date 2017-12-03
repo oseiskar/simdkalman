@@ -186,43 +186,33 @@ def smooth(posterior_mean, posterior_covariance, state_transition, process_noise
     return priv_smooth(posterior_mean, posterior_covariance, state_transition, process_noise, next_smooth_mean, next_smooth_covariance)[:2]
 
 @autoshape
-def expected_observation(mean, observation_model):
+def predict_observation(mean, covariance, observation_model, observation_noise):
     """
-    Expected value of observation :math:`y`
+    Compute probability distribution of the observation :math:`y`, given
+    the distribution of :math:`x`.
 
     :param mean: :math:`{\\mathbb E}[x]`
+    :param covariance: :math:`{\\rm Cov}[x]`
     :param observation_model: matrix :math:`H`
+    :param observation_noise: matrix :math:`R`
 
-    :rtype: :math:`{\\mathbb E}[y]`
+    :rtype: mean :math:`{\\mathbb E}[y]` and covariance :math:`{\\rm Cov}[y]`
     """
 
     n = mean.shape[1]
     m = observation_model.shape[1]
     assert(observation_model.shape[-2:] == (m,n))
-
-    # H * m
-    return ddot(observation_model, mean)
-
-@autoshape
-def observation_covariance(covariance, observation_model, observation_noise):
-    """
-    Covariance of observation :math:`y`
-
-    :param covariance: :math:`{\\rm Cov}[x]`
-    :param observation_model: matrix :math:`H`
-    :param observation_noise: matrix :math:`R`
-
-    :rtype: :math:`{\\rm Cov}[y]`
-    """
-
-    n = covariance.shape[1]
-    m = observation_model.shape[1]
     assert(covariance.shape[-2:] == (n,n))
     assert(observation_model.shape[-2:] == (m,n))
 
+    # H * m
+    obs_mean = ddot(observation_model, mean)
+
     # H * P * H^T + R
-    return ddot(observation_model,
+    obs_cov = ddot(observation_model,
         ddot_t_right(covariance, observation_model)) + observation_noise
+
+    return obs_mean, obs_cov
 
 @autoshape
 def priv_update_with_nan_check(

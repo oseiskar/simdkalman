@@ -246,23 +246,17 @@ class KalmanFilter(object):
             self.observation_model, self.observation_noise, y,
             log_likelihood=log_likelihood)
 
-    def expected_observation(self, m):
+    def predict_observation(self, m, P):
         """
-        Expected value of observation :math:`y` for a given state mean
+        Probability distribution of observation :math:`y` for a given
+        distribution of :math:`x`
 
         :param m: :math:`{\\mathbb E}[x]`
-        :rtype: :math:`{\\mathbb E}[y]`
+        :param P: :math:`{\\rm Cov}[x]`
+        :rtype: mean :math:`{\\mathbb E}[y]` and
+            covariance :math:`{\\rm Cov}[y]`
         """
-        return expected_observation(m, self.observation_model)
-
-    def observation_covariance(self, P):
-        """
-        Covariance of observation :math:`y` for a given state covariance
-
-        :param m: :math:`{\\rm Cov}[x]`
-        :rtype: :math:`{\\rm Cov}[y]`
-        """
-        return observation_covariance(P,
+        return predict_observation(m, P,
             self.observation_model, self.observation_noise)
 
     def smooth_current(self, m, P, ms, Ps):
@@ -529,11 +523,10 @@ class KalmanFilter(object):
 
             if keep_filtered:
                 if observations:
-                    filtered_observations.mean[:,j,:] = \
-                        self.expected_observation(m)[...,0]
+                    obs_mean, obs_cov = self.predict_observation(m, P)
+                    filtered_observations.mean[:,j,:] = obs_mean[...,0]
                     if covariances:
-                        filtered_observations.cov[:,j,:,:] = \
-                            self.observation_covariance(P)
+                        filtered_observations.cov[:,j,:,:] = obs_cov
 
                 filtered_states.mean[:,j,:] = m[...,0]
                 filtered_states.cov[:,j,:,:] = P
@@ -581,11 +574,10 @@ class KalmanFilter(object):
                         result.smoothed.states.cov[:,j,:,:] = Ps
 
                 if observations:
-                    result.smoothed.observations.mean[:,j,:] = \
-                        self.expected_observation(ms)[...,0]
+                    obs_mean, obs_cov = self.predict_observation(ms, Ps)
+                    result.smoothed.observations.mean[:,j,:] = obs_mean[...,0]
                     if covariances:
-                        result.smoothed.observations.cov[:,j,:,:] = \
-                            self.observation_covariance(Ps)
+                        result.smoothed.observations.cov[:,j,:,:] = obs_cov
 
                 if gains:
                     result.smoothed.gains[:,j,:,:] = Cs
@@ -626,11 +618,10 @@ class KalmanFilter(object):
                     if covariances:
                         result.predicted.states.cov[:,j,:,:] = P
                 if observations:
-                    result.predicted.observations.mean[:,j,:] = \
-                        self.expected_observation(m)[...,0]
+                    obs_mean, obs_cov = self.predict_observation(m, P)
+                    result.predicted.observations.mean[:,j,:] = obs_mean[...,0]
                     if covariances:
-                        result.predicted.observations.cov[:,j,:,:] = \
-                            self.observation_covariance(P)
+                        result.predicted.observations.cov[:,j,:,:] = obs_cov
 
                 m, P = self.predict_next(m, P)
 

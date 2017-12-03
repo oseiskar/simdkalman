@@ -49,5 +49,4 @@ dimension 2 with 3 different state transition matrices :math:`A`, one could do
 .. autofunction:: update
 .. autofunction:: update_with_nan_check
 .. autofunction:: smooth
-.. autofunction:: expected_observation(mean, observation_model)
-.. autofunction:: observation_covariance(covariance, observation_model, observation_noise)
+.. autofunction:: predict_observation(mean, covariance, observation_model, observation_noise)
