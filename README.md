@@ -2,6 +2,7 @@
 # SIMD Kalman
 [![Build Status](https://travis-ci.org/oseiskar/simdkalman.svg?branch=master)](https://travis-ci.org/oseiskar/simdkalman)
 [![Docs Status](https://readthedocs.org/projects/simdkalman/badge/?version=latest)](http://simdkalman.readthedocs.io/en/latest/?badge=latest)
+[![PyPI](https://img.shields.io/pypi/v/simdkalman.svg)](https://pypi.python.org/pypi/simdkalman)
 
 Fast Kalman filters in Python leveraging single-instruction multiple-data
 vectorization. That is, running _n_ similar Kalman filters on _n_
@@ -28,8 +29,11 @@ See `examples/example.py` for a more comprehensive example and
 [ReadTheDocs](https://simdkalman.readthedocs.io/) for the full documentation.
 For the changelog, see [releases page](https://github.com/oseiskar/simdkalman/releases)
 
-According to `examples/benchmark.py`. This can be up to 100x faster than
-[pykalman](https://pykalman.github.io/).
+According to `examples/benchmark.py`. This can be up to **100x faster** than
+[pykalman](https://pykalman.github.io/) and **70x faster** than
+[filterpy](https://github.com/rlabbe/filterpy) when can be vectorized over
+many independent timeseries. Also in the non-vectorized case, it can be 2x
+faster.
 
 ### Installation
 

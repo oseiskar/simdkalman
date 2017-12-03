@@ -7,6 +7,7 @@ import numpy.random as random
 import time
 import simdkalman
 import pykalman # pip install pykalman
+import filterpy.kalman # pip install filterpy
 
 N_SERIES = 100
 N_MEAS = 200
@@ -88,6 +89,30 @@ def compute_pykalman():
 
     return mean, cov
 
+def compute_filterpy():
+    mean = np.empty((N_SERIES,N_MEAS,2))
+    cov = np.empty((N_SERIES,N_MEAS,2,2))
+
+    kf = filterpy.kalman.KalmanFilter(dim_x=2, dim_z=1)
+
+    kf.F = state_transition
+    kf.Q = process_noise
+    kf.H = observation_model
+    kf.R = observation_noise
+
+    for j in range(N_SERIES):
+        kf.x = initial_values[j,:]
+        kf.P = initial_covariance
+
+        zs = list(data[j,:])
+        (mus, covs, _, _) = kf.batch_filter(zs)
+        # don't know what the last value is, maybe pairwise covariances?
+        (xs, Ps, _, _) = kf.rts_smoother(mus, covs)
+        mean[j,:,:] = np.vstack([x[np.newaxis,:] for x in xs])
+        cov[j,:,:,:] = np.vstack([P[np.newaxis,...] for P in Ps])
+
+    return mean, cov
+
 print("simdkalman")
 mean_simd, cov_simd = time_computation(compute_simd)
 
@@ -97,13 +122,17 @@ mean_simd, cov_simd = time_computation(compute_non_simd)
 print("pykalman")
 mean_pk, cov_pk = time_computation(compute_pykalman)
 
-print("difference")
+print("filterpy")
+mean_fp, cov_fp = time_computation(compute_filterpy)
+
+print("difference (simdkalman vs pykalman)")
 print("mean: %g" % (np.linalg.norm(mean_simd - mean_pk) / np.linalg.norm(mean_pk)))
 print("cov: %g" % (np.linalg.norm(cov_simd - cov_pk) / np.linalg.norm(cov_pk)))
 
 import matplotlib.pyplot as plt
 plt.plot(data[0,:], 'b.')
-plt.plot(mean_simd[0,:,0], label="simd")
-plt.plot(mean_pk[0,:,0], label="pk")
+plt.plot(mean_simd[0,:,0], label="simdkalman")
+plt.plot(mean_pk[0,:,0], label="pykalman")
+plt.plot(mean_fp[0,:,0], label="filterpy")
 plt.legend()
 plt.show()
