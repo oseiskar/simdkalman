@@ -281,7 +281,7 @@ class KalmanFilter(object):
             self.state_transition, self.process_noise, ms, Ps)
 
     def predict(self,
-        training_matrix,
+        data,
         n_test,
         initial_value = None,
         initial_covariance = None,
@@ -295,17 +295,23 @@ class KalmanFilter(object):
 
           * 1d array, like ``[1,2,3,4]``. In this case, one Kalman filter is
             used and the return value structure will contain an 1d array of
-            observations
+            ``observations`` (both ``.mean``  and ``.cov`` will be 1d).
 
           * 2d matrix, whose each row is interpreted as an independent time
-            series, all of which are filtered independently with the same
-            Kalman model
+            series, all of which are filtered independently. The returned
+            ``observations`` members will be 2-dimensional in this case.
+
+          * 3d matrix, whose the last dimension can be used for multi-dimensional
+            observations, i.e, ``data[1,2,:]`` defines the components of the
+            third observation of the second series. In the-multi-dimensional
+            case the returned ``observations.mean`` will be 3-dimensional and
+            ``observations.cov`` 4-dimensional.
 
         Initial values and covariances can be given as scalars or 2d matrices
         in which case the same initial states will be used for all rows or
         3d arrays for different initial values.
 
-        :param training_matrix: Past data
+        :param data: Past data
 
         :param n_test:  number of future steps to predict.
         :type n_test: integer
@@ -328,7 +334,7 @@ class KalmanFilter(object):
         """
 
         return self.compute(
-            training_matrix,
+            data,
             n_test,
             initial_value,
             initial_covariance,
@@ -354,8 +360,14 @@ class KalmanFilter(object):
             ``observations`` (both ``.mean``  and ``.cov`` will be 1d).
 
           * 2d matrix, whose each row is interpreted as an independent time
-            series, all of which are smoothed independently with the same
-            Kalman model
+            series, all of which are smoothed independently. The returned
+            ``observations`` members will be 2-dimensional in this case.
+
+          * 3d matrix, whose the last dimension can be used for multi-dimensional
+            observations, i.e, ``data[1,2,:]`` defines the components of the
+            third observation of the second series. In the-multi-dimensional
+            case the returned ``observations.mean`` will be 3-dimensional and
+            ``observations.cov`` 4-dimensional.
 
         Initial values and covariances can be given as scalars or 2d matrices
         in which case the same initial states will be used for all rows or
@@ -390,7 +402,7 @@ class KalmanFilter(object):
             verbose = verbose).smoothed
 
     def compute(self,
-        training_matrix,
+        data,
         n_test,
         initial_value = None,
         initial_covariance = None,
@@ -437,13 +449,13 @@ class KalmanFilter(object):
         # pylint: disable=W0201
         result = KalmanFilter.Result()
 
-        training_matrix = ensure_matrix(training_matrix)
-        single_sequence = len(training_matrix.shape) == 1
+        data = ensure_matrix(data)
+        single_sequence = len(data.shape) == 1
         if single_sequence:
-            training_matrix = training_matrix[np.newaxis,:]
+            data = data[np.newaxis,:]
 
-        n_vars = training_matrix.shape[0]
-        n_measurements = training_matrix.shape[1]
+        n_vars = data.shape[0]
+        n_measurements = data.shape[1]
         n_states = self.state_transition.shape[0]
         n_obs = self.observation_model.shape[-2]
 
@@ -511,7 +523,7 @@ class KalmanFilter(object):
             if verbose:
                 print('filtering %d/%d' % (j+1, n_measurements))
 
-            y = training_matrix[:,j,...].reshape((n_vars, n_obs, 1))
+            y = data[:,j,...].reshape((n_vars, n_obs, 1))
 
             tup = self.update(m, P, y, log_likelihood)
             m, P, K = tup[:3]
@@ -659,7 +671,7 @@ class KalmanFilter(object):
 
         return (1.0 / (n_measurements - 1)) * res
 
-    def em_observation_noise(self, result, training_matrix, verbose=False):
+    def em_observation_noise(self, result, data, verbose=False):
         n_vars, n_measurements, _ = result.smoothed.states.mean.shape
         n_obs = self.observation_model.shape[-2]
 
@@ -673,7 +685,7 @@ class KalmanFilter(object):
             ms = result.smoothed.states.mean[:,j,:][...,np.newaxis]
             Ps = result.smoothed.states.cov[:,j,...]
 
-            y = training_matrix[:,j,...].reshape((n_vars, n_obs, 1))
+            y = data[:,j,...].reshape((n_vars, n_obs, 1))
             not_nan = np.ravel(np.all(~np.isnan(y), axis=1))
             n_not_nan += not_nan
             err = y - ddot(self.observation_model, ms)
@@ -685,16 +697,16 @@ class KalmanFilter(object):
 
         return res.reshape((n_vars,n_obs,n_obs))
 
-    def em(self, training_matrix, n_iter=5, initial_value=None, initial_covariance=None, verbose=False):
+    def em(self, data, n_iter=5, initial_value=None, initial_covariance=None, verbose=False):
 
         if n_iter <= 0:
             return self
 
-        training_matrix = ensure_matrix(training_matrix)
-        if len(training_matrix.shape) == 1:
-            training_matrix = training_matrix[np.newaxis,:]
+        data = ensure_matrix(data)
+        if len(data.shape) == 1:
+            data = data[np.newaxis,:]
 
-        n_vars = training_matrix.shape[0]
+        n_vars = data.shape[0]
         n_states = self.state_transition.shape[0]
 
         if initial_value is None:
@@ -705,7 +717,7 @@ class KalmanFilter(object):
             print(" * E step")
 
         e_step = self.compute(
-            training_matrix,
+            data,
             n_test = 0,
             initial_value = initial_value,
             initial_covariance = initial_covariance,
@@ -723,7 +735,7 @@ class KalmanFilter(object):
             print(" * M step")
 
         process_noise = self.em_process_noise(e_step, verbose=verbose)
-        observation_noise = self.em_observation_noise(e_step, training_matrix, verbose=verbose)
+        observation_noise = self.em_observation_noise(e_step, data, verbose=verbose)
         initial_value, initial_covariance = em_initial_state(e_step, initial_value)
 
         new_model = KalmanFilter(
@@ -732,7 +744,7 @@ class KalmanFilter(object):
             self.observation_model,
             observation_noise)
 
-        return new_model.em(training_matrix, n_iter-1, initial_value, initial_covariance, verbose)
+        return new_model.em(data, n_iter-1, initial_value, initial_covariance, verbose)
 
 def em_initial_state(result, initial_means):
 
