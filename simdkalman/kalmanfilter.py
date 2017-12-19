@@ -29,7 +29,6 @@ Usage example
 
 .. testsetup ::
 
-   import numpy
    import numpy.random
    numpy.random.seed(0)
 
@@ -38,6 +37,7 @@ Define model
 .. testcode ::
 
    import simdkalman
+   import numpy
 
    kf = simdkalman.KalmanFilter(
        state_transition = [[1,1],[0,1]],           # matrix A
@@ -48,6 +48,8 @@ Define model
 Generate some fake data
 
 .. testcode ::
+
+   import numpy.random
 
    # 100 independent time series
    data = numpy.random.normal(size=(100, 200))
