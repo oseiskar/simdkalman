@@ -420,7 +420,7 @@ class KalmanFilter(object):
         by other methods, but can also be used directly if, e.g., both smoothed
         and predicted data is wanted.
 
-        See **smooth** and **precit** for explanation of the common parameters.
+        See **smooth** and **predict** for explanation of the common parameters.
         With this method, there also exist the following flags.
 
         :param smoothed: compute Kalman smoother (used by **smooth**)
