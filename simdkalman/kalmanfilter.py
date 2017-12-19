@@ -37,25 +37,25 @@ Define model
 .. testcode ::
 
    import simdkalman
-   import numpy
+   import numpy as np
 
    kf = simdkalman.KalmanFilter(
-       state_transition = [[1,1],[0,1]],           # matrix A
-       process_noise = numpy.diag([0.1, 0.01]),    # Q
-       observation_model = numpy.array([[1,0]]),   # H
-       observation_noise = 1.0)                    # R
+       state_transition = [[1,1],[0,1]],        # matrix A
+       process_noise = np.diag([0.1, 0.01]),    # Q
+       observation_model = np.array([[1,0]]),   # H
+       observation_noise = 1.0)                 # R
 
 Generate some fake data
 
 .. testcode ::
 
-   import numpy.random
+   import numpy.random as random
 
    # 100 independent time series
-   data = numpy.random.normal(size=(100, 200))
+   data = random.normal(size=(100, 200))
 
    # with 10% of NaNs denoting missing values
-   data[numpy.random.uniform(size=data.shape) < 0.1] = numpy.nan
+   data[random.uniform(size=data.shape) < 0.1] = np.nan
 
 
 Smooth all data
@@ -64,7 +64,7 @@ Smooth all data
 
    smoothed = kf.smooth(data,
                         initial_value = [1,0],
-                        initial_covariance = numpy.eye(2) * 0.5)
+                        initial_covariance = np.eye(2) * 0.5)
 
    # second timeseries, third time step, hidden state x
    print('mean')
@@ -89,7 +89,7 @@ Predict new data for a single series (1d case)
 
    # predicted observation y, third new time step
    pred_mean = predicted.observations.mean[2]
-   pred_stdev = numpy.sqrt(predicted.observations.cov[2])
+   pred_stdev = np.sqrt(predicted.observations.cov[2])
 
    print('%g +- %g' % (pred_mean, pred_stdev))
 
