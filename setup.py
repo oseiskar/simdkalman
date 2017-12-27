@@ -10,7 +10,7 @@ with open(path.join(here, 'doc', 'DESCRIPTION.rst'), encoding='utf-8') as f:
 
 setup(
     name='simdkalman',
-    version='0.9.1',
+    version='0.9.2',
     description='Kalman filters vectorized as Single Instruction, Multiple Data',
     long_description=long_description,
     url='https://simdkalman.readthedocs.io/',
