@@ -44,7 +44,7 @@ setup(
     # this:
     #   py_modules=["my_module"],
 
-    install_requires=['numpy>=1.10.0'],
+    install_requires=['numpy>=1.9.0'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

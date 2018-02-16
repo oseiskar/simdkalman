@@ -9,17 +9,24 @@ the *last* two axes of the arrays.
 import numpy as np
 from functools import wraps
 
+# work around some numpy glitches associated with different versions
+from numpy.lib import NumpyVersion
+_HAVE_MATMUL = NumpyVersion(np.__version__) >= '1.10.0'
+_EINSUM_OPTS = {}
+if NumpyVersion(np.__version__) == '1.14.0':
+    # https://github.com/numpy/numpy/issues/10343
+    _EINSUM_OPTS = { 'optimize': False }
+
 def ddot(A, B):
     "Matrix multiplication over last two axes"
-    return np.matmul(A, B)
-    #return np.einsum('...ij,...jk->...ik', A, B)
+    if _HAVE_MATMUL:
+        return np.matmul(A, B)
+    else:
+        return np.einsum('...ij,...jk->...ik', A, B)
 
 def ddot_t_right(A, B):
     "Matrix multiplication over last 2 axes with right operand transposed"
-    # optimize=False works around issues such as
-    # https://github.com/numpy/numpy/issues/10343
-    # and enables this package to work with numpy 1.14.0
-    return np.einsum('...ij,...kj->...ik', A, B, optimize=False)
+    return np.einsum('...ij,...kj->...ik', A, B, **_EINSUM_OPTS)
 
 def douter(a, b):
     "Outer product, last two axes"
