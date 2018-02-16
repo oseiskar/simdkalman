@@ -16,7 +16,10 @@ def ddot(A, B):
 
 def ddot_t_right(A, B):
     "Matrix multiplication over last 2 axes with right operand transposed"
-    return np.einsum('...ij,...kj->...ik', A, B)
+    # optimize=False works around issues such as
+    # https://github.com/numpy/numpy/issues/10343
+    # and enables this package to work with numpy 1.14.0
+    return np.einsum('...ij,...kj->...ik', A, B, optimize=False)
 
 def douter(a, b):
     "Outer product, last two axes"
