@@ -17,7 +17,7 @@ Terminology
 .. automodule:: simdkalman
 
 For complete code examples with figures, see:
-https://github.com/oseiskar/simdkalman/blob/master/examples/example.py and
+https://github.com/oseiskar/simdkalman/blob/master/examples/ and
 `this Gist <https://gist.github.com/oseiskar/5e8937af96efdfe5f8a6994764b07081>`_.
 
 Using multi-dimensional observations is demonstrated in
