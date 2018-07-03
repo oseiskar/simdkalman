@@ -191,7 +191,6 @@ def smooth(posterior_mean, posterior_covariance, state_transition, process_noise
     :rtype: ``(smooth_mean, smooth_covariance, smoothing_gain)``
         smoothed mean :math:`{\\mathbb E}[x_j|y_1,\\ldots,y_T]`,
         and covariance :math:`{\\rm Cov}[x_j|y_1,\\ldots,y_T]`
-        & smoothing gain :math:`C`
     """
     return priv_smooth(posterior_mean, posterior_covariance, state_transition, process_noise, next_smooth_mean, next_smooth_covariance)[:2]
 
