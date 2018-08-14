@@ -10,10 +10,10 @@ with open(path.join(here, 'doc', 'DESCRIPTION.rst'), encoding='utf-8') as f:
 
 setup(
     name='simdkalman',
-    version='0.9.3',
+    version='1.0.0',
     description='Kalman filters vectorized as Single Instruction, Multiple Data',
     long_description=long_description,
-    url='https://simdkalman.readthedocs.io/',
+    url='https://github.com/oseiskar/simdkalman',
     author='Otto Seiskari',
 
     license='MIT',
@@ -24,7 +24,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
 
         # same as "pykalman"
         'Intended Audience :: Science/Research',
