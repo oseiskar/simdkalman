@@ -519,7 +519,7 @@ class KalmanFilter(object):
             filtered_states = empty_gaussian(cov=True)
 
         if gains:
-            result.filtered.gains = np.empty((n_vars, n_measurements, n_states, n_states))
+            result.filtered.gains = np.empty((n_vars, n_measurements, n_states, n_obs))
 
         for j in range(n_measurements):
             if verbose:
