@@ -432,7 +432,8 @@ class KalmanFilter(object):
         :param likelihoods: return likelihoods of each step
         :type likelihoods: boolean
         :param gains: return Kalman gains and pairwise covariances (used by
-            the EM algorithm)
+            the EM algorithm). If true, the gains are provided as a member of
+            the relevant subresult ``filtered.gains`` and/or ``smoothed.gains``.
         :type gains: boolean
         :param log_likelihood: return the log-likelihood(s) for the entire
             series. If matrix data is given, this will be a vector where each
@@ -441,10 +442,10 @@ class KalmanFilter(object):
 
         :rtype: result object whose fields depend on of the above parameter
             flags are True. The possible values are:
-            ``smoothed`` (the return value of **smooth**),
-            ``filtered`` (like *smoothed*),
+            ``smoothed`` (the return value of **smooth**, may contain ``smoothed.gains``),
+            ``filtered`` (like ``smoothed``, may also contain ``filtered.gains``),
             ``predicted`` (the return value of **predict** if ``n_test > 0``)
-            ``gains``, ``pairwise_covariances``, ``likelihoods`` and
+            ``pairwise_covariances``, ``likelihoods`` and
             ``log_likelihood``.
         """
 
