@@ -274,7 +274,7 @@ def update_with_nan_check(
         measurement)[:2]
 
 def ensure_matrix(x, dim=1):
-    # pylint: disable=W0702,W0104
+    # pylint: disable=W0702,W0104,E1136
     try:
         y = np.array(x)
         y.shape[0]
