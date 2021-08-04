@@ -45,7 +45,7 @@ if testing_different_transitions:
     A = np.zeros((2,3,3) )
     A1 = np.array([[0.4, 0.4, 0.2], [1, 0, 0], [0, 1, 0]])
     A[0,:,:] = A0
-    A[0,:,:] = A1
+    A[1,:,:] = A1
 else:
     A = A0
 
