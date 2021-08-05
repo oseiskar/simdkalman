@@ -1,6 +1,5 @@
 
 # SIMD Kalman
-[![Build Status](https://travis-ci.com/oseiskar/simdkalman.svg?branch=master)](https://travis-ci.com/oseiskar/simdkalman)
 [![Docs Status](https://readthedocs.org/projects/simdkalman/badge/?version=latest)](http://simdkalman.readthedocs.io/en/latest/?badge=latest)
 [![PyPI](https://img.shields.io/pypi/v/simdkalman.svg)](https://pypi.python.org/pypi/simdkalman)
 
