@@ -1,13 +1,7 @@
-# Example of updating with different H,y etc
+# Example of assimilating observation with different H
 
 from simdkalman import KalmanFilter
 import numpy as np 
-
-# Process noise 
-Q = np.zeros((2,3,3))
-Q[0,:,:] = np.eye(3)
-Q[1,:,:] = np.eye(3)
-
 
 # Prior state means 
 m0 = np.zeros((2,3,1))
@@ -38,16 +32,14 @@ H = np.zeros((2, 1, 3))
 H[0, :, :] = H0
 H[1, :, :] = H1
 
-# Transition(s) 
-testing_different_transitions = False
-A0 = np.array([[0.5, 0.3, 0.2], [1, 0, 0], [0, 1, 0]])
-if testing_different_transitions:
-    A = np.zeros((2,3,3) )
-    A1 = np.array([[0.4, 0.4, 0.2], [1, 0, 0], [0, 1, 0]])
-    A[0,:,:] = A0
-    A[1,:,:] = A1
-else:
-    A = A0
+# Transition, process noise
+# This example only illustrates the update step, not evolution in time
+# However we need to instantiate the KF
+A = np.array([[0.5, 0.3, 0.2], [1, 0, 0], [0, 1, 0]])
+Q = np.zeros((2,3,3))
+Q[0,:,:] = np.eye(3)
+Q[1,:,:] = np.eye(3)
+
 
 kf = KalmanFilter(
     state_transition=A,  # A
@@ -56,3 +48,6 @@ kf = KalmanFilter(
     observation_noise=R)  # R
 m1, P1, K, ll = kf.update(m0,P0,y_update, log_likelihood=True)
 print(m1)
+
+
+
