@@ -197,7 +197,7 @@ class KalmanFilter(object):
         observation_noise):
 
         state_transition = ensure_matrix(state_transition)
-        n_states = state_transition.shape[0]
+        n_states = state_transition.shape[-2] # Allow different transitions
 
         process_noise = ensure_matrix(process_noise, n_states)
         observation_model = ensure_matrix(observation_model)
@@ -710,7 +710,7 @@ class KalmanFilter(object):
             data = data[np.newaxis,:]
 
         n_vars = data.shape[0]
-        n_states = self.state_transition.shape[0]
+        n_states = self.state_transition.shape[-2] # Allow different transitions
 
         if initial_value is None:
             initial_value = np.zeros((n_vars, n_states, 1))
