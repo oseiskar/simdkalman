@@ -171,6 +171,27 @@ class TestPrimitives(TestWithMatrices):
         self.assertMatrixEqual(m[2,...], mean[2,...], epsilon=1e-6)
         self.assertMatrixEqual(P[1,...], P1[1,...])
 
+        ms, Ps = primitives.smooth(m, P, state_transition, process_noise, m, P)
+
+        kf = simdkalman.KalmanFilter(
+            state_transition,
+            process_noise,
+            observation_model,
+            observation_noise)
+
+        m1_alt, P1_alt = kf.predict_next(mean, covariance)
+        self.assertMatrixEqual(m1, m1_alt)
+        self.assertMatrixEqual(P1, P1_alt)
+
+        m_alt, P_alt = kf.update(m1_alt, P1_alt, measurement)[:2]
+        self.assertMatrixEqual(m, m_alt)
+        self.assertMatrixEqual(P, P_alt)
+
+        ms_alt, Ps_alt = kf.smooth_current(m_alt, P_alt, m_alt, P_alt)[:2]
+        self.assertMatrixEqual(ms, ms_alt)
+        self.assertMatrixEqual(Ps, Ps_alt)
+
+
     def test_semi_vectorized(self):
 
         mean = np.zeros((3,2,1))
@@ -212,7 +233,6 @@ class TestPrimitives(TestWithMatrices):
         self.assertMatrixEqual(m[1,...], m1[1,...])
         self.assertMatrixEqual(m[2,...], mean[2,...], epsilon=1e-6)
         self.assertMatrixEqual(P[1,...], P1[1,...])
-
 
     def test_one_dimensional(self):
         mean = np.array([[1]])
