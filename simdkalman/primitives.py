@@ -120,10 +120,8 @@ def _update(prior_mean, prior_covariance, observation_model, observation_noise, 
         l += np.log(np.linalg.det(S))
         l *= -0.5
         return posterior_mean, posterior_covariance, K, l
-    else:
-        return posterior_mean, posterior_covariance, K
 
-    return posterior_mean, posterior_covariance
+    return posterior_mean, posterior_covariance, K
 
 def update(prior_mean, prior_covariance, observation_model, observation_noise, measurement):
     """
