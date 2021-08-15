@@ -20,8 +20,11 @@ For complete code examples with figures, see:
 https://github.com/oseiskar/simdkalman/blob/master/examples/ and
 `this Gist <https://gist.github.com/oseiskar/5e8937af96efdfe5f8a6994764b07081>`_.
 
-Using multi-dimensional observations is demonstrated in
+Usage of multi-dimensional observations is demonstrated in
 `this example <https://github.com/oseiskar/simdkalman/blob/master/examples/multi_dimensional_observations.py>`_.
+
+Extended Kalman Filters (EKF) can be implemented using the ``simdkalman.primitives`` module, see
+`example <https://github.com/oseiskar/simdkalman/blob/master/examples/primitives_ekf.py>`_.
 
 Class documentation
 -------------------
