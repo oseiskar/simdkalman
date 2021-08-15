@@ -10,7 +10,7 @@ with open(path.join(here, 'doc', 'DESCRIPTION.rst'), encoding='utf-8') as f:
 
 setup(
     name='simdkalman',
-    version='1.0.1',
+    version='1.0.2',
     description='Kalman filters vectorized as Single Instruction, Multiple Data',
     long_description=long_description,
     url='https://github.com/oseiskar/simdkalman',
@@ -37,7 +37,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3'
     ],
-    keywords='kalman filter smoothing em timeseries',
+    keywords='kalman kalman-filter smoothing em timeseries ekf',
     packages=find_packages(exclude=['contrib', 'doc', 'tests']),
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
