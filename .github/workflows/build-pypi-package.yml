@@ -1,0 +1,23 @@
+name: Build PyPI package
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '2.7'
+      - name: Install wheel
+        run: pip install wheel
+      - name: Build package
+        run: python setup.py bdist_wheel
+      - uses: actions/upload-artifact@v2
+        if: github.ref == 'refs/heads/master'
+        with:
+          name: wheel
+          path: |
+              dist/simdkalman*.whl
