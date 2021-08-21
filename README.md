@@ -2,6 +2,7 @@
 # SIMD Kalman
 [![Docs Status](https://readthedocs.org/projects/simdkalman/badge/?version=latest)](http://simdkalman.readthedocs.io/en/latest/?badge=latest)
 [![PyPI](https://img.shields.io/pypi/v/simdkalman.svg)](https://pypi.python.org/pypi/simdkalman)
+[![PyPi downloads](https://img.shields.io/pypi/dm/simdkalman)](https://pypi.python.org/pypi/simdkalman)
 
 Fast Kalman filters in Python leveraging single-instruction multiple-data
 vectorization. That is, running _n_ similar Kalman filters on _n_
