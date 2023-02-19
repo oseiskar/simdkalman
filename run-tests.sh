@@ -3,7 +3,7 @@ set -e
 set -v
 
 # unit tests
-nosetests
+python tests/testsuite.py
 
 # linter
 pylint simdkalman
