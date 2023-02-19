@@ -53,6 +53,6 @@ setup(
     extras_require={
         'dev': ['check-manifest'],
         'docs': ['sphinx'],
-        'test': ['nose', 'pylint']
+        'test': ['pylint']
     }
 )
