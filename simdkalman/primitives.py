@@ -26,7 +26,7 @@ def ddot(A, B):
 
 def ddot_t_right(A, B):
     "Matrix multiplication over last 2 axes with right operand transposed"
-    return np.einsum('...ij,...kj->...ik', A, B, **_EINSUM_OPTS)
+    return np.matmul(A, np.swapaxes(B, -1, -2))
 
 def douter(a, b):
     "Outer product, last two axes"
