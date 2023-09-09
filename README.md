@@ -66,8 +66,9 @@ Once:
 Each distribution:
 
     # first, set version in setup.py
-    # then create distributable package
-    python setup.py bdist_wheel
+    # then, download the wheel.zip artifact from Github and extract it to dist/
+    # or create it manually: python setup.py bdist_wheel
+
     # test PyPI site
     twine upload --repository testpypi dist/simdkalman-VERSION*
     # the real thing
@@ -88,7 +89,3 @@ Test installation from the test site with
     pip install matplotlib
     python examples/example.py
     deactivate
-
-### TODO
-
- - [ ] EM algorithm documentation and options
