@@ -355,7 +355,7 @@ class KalmanFilter(object):
         initial_covariance = None,
         observations = True,
         states = True,
-        covariances = False,
+        covariances = True,
         verbose = False):
         """
         Smooth given data, which can be either
@@ -386,7 +386,8 @@ class KalmanFilter(object):
         :type states: boolean
         :param observations: return smoothed observations :math:`y`?
         :type observations: boolean
-        :param covariances: include covariances results?
+        :param covariances: include covariances results? For lower memory
+            usage, set this flag to ``False``.
         :type covariances: boolean
 
         :rtype: Result object with fields
