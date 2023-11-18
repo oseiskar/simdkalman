@@ -509,8 +509,8 @@ class KalmanFilter(object):
         m = initial_value
         P = initial_covariance
 
-        keep_filtered = filtered or smoothed
-        if filtered or gains:
+        compute_filtered = filtered or smoothed
+        if compute_filtered or gains:
             result.filtered = KalmanFilter.Result()
 
         if log_likelihood:
@@ -518,7 +518,7 @@ class KalmanFilter(object):
             if likelihoods:
                 result.log_likelihoods = np.empty((n_vars, n_measurements))
 
-        if keep_filtered:
+        if compute_filtered:
             if observations:
                 filtered_observations = empty_gaussian(n_states=n_obs)
             filtered_states = empty_gaussian(cov=True)
@@ -540,7 +540,7 @@ class KalmanFilter(object):
                 if likelihoods:
                     result.log_likelihoods[:,j] = l
 
-            if keep_filtered:
+            if compute_filtered:
                 if observations:
                     obs_mean, obs_cov = self.predict_observation(m, P)
                     filtered_observations.mean[:,j,:] = obs_mean[...,0]
@@ -561,15 +561,29 @@ class KalmanFilter(object):
                 result.smoothed.states = empty_gaussian()
 
                 # lazy trick to keep last filtered = last smoothed
-                result.smoothed.states.mean = filtered_states.mean
+                if filtered:
+                    # must create a copy to avoid changing filtered results
+                    result.smoothed.states.mean = 1*filtered_states.mean
+                else:
+                    # save memory with a shallow copy if filtered result are discarded
+                    result.smoothed.states.mean = filtered_states.mean
                 if covariances:
-                    result.smoothed.states.cov = filtered_states.cov
+                    if filtered:
+                        result.smoothed.states.cov = 1*filtered_states.cov
+                    else:
+                        result.smoothed.states.cov = filtered_states.cov
 
             if observations:
                 result.smoothed.observations = empty_gaussian(n_states=n_obs)
-                result.smoothed.observations.mean = filtered_observations.mean
+                if filtered:
+                    result.smoothed.observations.mean = 1*filtered_observations.mean
+                else:
+                    result.smoothed.observations.mean = filtered_observations.mean
                 if covariances:
-                    result.smoothed.observations.cov = filtered_observations.cov
+                    if filtered:
+                        result.smoothed.observations.cov = 1*filtered_observations.cov
+                    else:
+                        result.smoothed.observations.cov = filtered_observations.cov
 
             if gains:
                 result.smoothed.gains = np.zeros((n_vars, n_measurements, n_states, n_states))
