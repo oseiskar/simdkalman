@@ -302,6 +302,38 @@ class TestKalman(TestWithMatrices):
         self.assertSequenceEqual(r.states.mean.shape, (5,4,1))
         self.assertSequenceEqual(r.states.cov.shape, (5,4,1,1))
 
+    def test_compute_same_result_with_and_without_smooth(self):
+        def compute(smooth):
+            training_matrix = np.ones((5,10))
+
+            kf = simdkalman.KalmanFilter(
+                state_transition = np.eye(2),
+                process_noise = 0.1,
+                observation_model = np.array([[1,1]]),
+                observation_noise = 0.1)
+
+            return kf.compute(
+                training_matrix,
+                n_test = 4,
+                initial_covariance = 1.0,
+                filtered = True,
+                observations = True,
+                smoothed = smooth,
+                gains = True,
+                log_likelihood = True)
+
+        with_smooth = compute(True)
+        wo_smooth = compute(False)
+
+        EPS = 1e-6
+        self.assertMatrixEqual(with_smooth.predicted.observations.mean, wo_smooth.predicted.observations.mean, EPS)
+        self.assertMatrixEqual(with_smooth.predicted.observations.cov, wo_smooth.predicted.observations.cov, EPS)
+        self.assertMatrixEqual(with_smooth.predicted.states.mean, wo_smooth.predicted.states.mean, EPS)
+        self.assertMatrixEqual(with_smooth.predicted.states.cov, wo_smooth.predicted.states.cov, EPS)
+        self.assertMatrixEqual(with_smooth.filtered.states.mean, wo_smooth.filtered.states.mean, EPS)
+        self.assertMatrixEqual(with_smooth.filtered.states.cov, wo_smooth.filtered.states.cov, EPS)
+        self.assertMatrixEqual(with_smooth.filtered.observations.mean, wo_smooth.filtered.observations.mean, EPS)
+        self.assertMatrixEqual(with_smooth.filtered.observations.cov, wo_smooth.filtered.observations.cov, EPS)
 
     def test_train_and_predict_vectorized_kalman_filter_2_states(self):
         training_matrix = np.ones((5,10))
